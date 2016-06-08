@@ -36,7 +36,7 @@ from capa.xqueue_interface import XQUEUE_TIMEOUT
 lookup_tag = inputtypes.registry.get_class_for_tag
 
 
-DESCRIBEDBY = 'aria-describedby="desc-1 desc-2"'
+DESCRIBEDBY = 'aria-describedby="status_{status_id} desc-1 desc-2"'
 DESCRIPTIONS = OrderedDict([('desc-1', 'description text 1'), ('desc-2', 'description text 2')])
 RESPONSE_DATA = {
     'label': 'question text 101',
@@ -67,7 +67,7 @@ class OptionInputTest(unittest.TestCase):
         option_input = lookup_tag('optioninput')(test_capa_system(), element, state)
 
         context = option_input._get_render_context()  # pylint: disable=protected-access
-
+        prob_id = 'sky_input'
         expected = {
             'STATIC_URL': '/dummy-static/',
             'value': 'Down',
@@ -75,10 +75,10 @@ class OptionInputTest(unittest.TestCase):
             'status': inputtypes.Status('answered'),
             'msg': '',
             'inline': False,
-            'id': 'sky_input',
+            'id': prob_id,
             'default_option_text': 'Select an option',
             'response_data': RESPONSE_DATA,
-            'describedby_html': DESCRIBEDBY
+            'describedby_html': DESCRIBEDBY.format(status_id='sky_input')
         }
 
         self.assertEqual(context, expected)
@@ -147,7 +147,7 @@ class ChoiceGroupTest(unittest.TestCase):
             'submitted_message': 'Answer received.',
             'name_array_suffix': expected_suffix,   # what is this for??
             'response_data': RESPONSE_DATA,
-            'describedby_html': DESCRIBEDBY
+            'describedby_html': DESCRIBEDBY.format(status_id='sky_input')
         }
 
         self.assertEqual(context, expected)
@@ -189,10 +189,10 @@ class JavascriptInputTest(unittest.TestCase):
         the_input = lookup_tag('javascriptinput')(test_capa_system(), element, state)
 
         context = the_input._get_render_context()  # pylint: disable=protected-access
-
+        prob_id = 'prob_1_2'
         expected = {
             'STATIC_URL': '/dummy-static/',
-            'id': 'prob_1_2',
+            'id': prob_id,
             'status': inputtypes.Status('unanswered'),
             'msg': '',
             'value': '3',
@@ -201,7 +201,7 @@ class JavascriptInputTest(unittest.TestCase):
             'display_class': display_class,
             'problem_state': problem_state,
             'response_data': RESPONSE_DATA,
-            'describedby_html': DESCRIBEDBY
+            'describedby_html': DESCRIBEDBY.format(status_id=prob_id)
         }
 
         self.assertEqual(context, expected)
@@ -225,10 +225,10 @@ class TextLineTest(unittest.TestCase):
         the_input = lookup_tag('textline')(test_capa_system(), element, state)
 
         context = the_input._get_render_context()  # pylint: disable=protected-access
-
+        prob_id = 'prob_1_2'
         expected = {
             'STATIC_URL': '/dummy-static/',
-            'id': 'prob_1_2',
+            'id': prob_id,
             'value': 'BumbleBee',
             'status': inputtypes.Status('unanswered'),
             'size': size,
@@ -239,7 +239,7 @@ class TextLineTest(unittest.TestCase):
             'trailing_text': '',
             'preprocessor': None,
             'response_data': RESPONSE_DATA,
-            'describedby_html': DESCRIBEDBY
+            'describedby_html': DESCRIBEDBY.format(status_id=prob_id)
         }
         self.assertEqual(context, expected)
 
@@ -261,10 +261,10 @@ class TextLineTest(unittest.TestCase):
         the_input = lookup_tag('textline')(test_capa_system(), element, state)
 
         context = the_input._get_render_context()  # pylint: disable=protected-access
-
+        prob_id = 'prob_1_2'
         expected = {
             'STATIC_URL': '/dummy-static/',
-            'id': 'prob_1_2',
+            'id': prob_id,
             'value': 'BumbleBee',
             'status': inputtypes.Status('unanswered'),
             'size': size,
@@ -278,7 +278,7 @@ class TextLineTest(unittest.TestCase):
                 'script_src': script,
             },
             'response_data': RESPONSE_DATA,
-            'describedby_html': DESCRIBEDBY
+            'describedby_html': DESCRIBEDBY.format(status_id=prob_id)
         }
         self.assertEqual(context, expected)
 
@@ -309,10 +309,10 @@ class TextLineTest(unittest.TestCase):
             the_input = lookup_tag('textline')(test_capa_system(), element, state)
 
             context = the_input._get_render_context()  # pylint: disable=protected-access
-
+            prob_id = 'prob_1_2'
             expected = {
                 'STATIC_URL': '/dummy-static/',
-                'id': 'prob_1_2',
+                'id': prob_id,
                 'value': 'BumbleBee',
                 'status': inputtypes.Status('unanswered'),
                 'size': size,
@@ -323,7 +323,7 @@ class TextLineTest(unittest.TestCase):
                 'trailing_text': expected_text,
                 'preprocessor': None,
                 'response_data': RESPONSE_DATA,
-                'describedby_html': DESCRIBEDBY
+                'describedby_html': DESCRIBEDBY.format(status_id=prob_id)
             }
             self.assertEqual(context, expected)
 
@@ -355,10 +355,10 @@ class FileSubmissionTest(unittest.TestCase):
         the_input = input_class(test_capa_system(), element, state)
 
         context = the_input._get_render_context()  # pylint: disable=protected-access
-
+        prob_id = 'prob_1_2'
         expected = {
             'STATIC_URL': '/dummy-static/',
-            'id': 'prob_1_2',
+            'id': prob_id,
             'status': inputtypes.Status('queued'),
             'msg': the_input.submitted_msg,
             'value': 'BumbleBee.py',
@@ -366,7 +366,7 @@ class FileSubmissionTest(unittest.TestCase):
             'allowed_files': '["runme.py", "nooooo.rb", "ohai.java"]',
             'required_files': '["cookies.py"]',
             'response_data': RESPONSE_DATA,
-            'describedby_html': DESCRIBEDBY
+            'describedby_html': DESCRIBEDBY.format(status_id=prob_id)
         }
 
         self.assertEqual(context, expected)
@@ -407,10 +407,10 @@ class CodeInputTest(unittest.TestCase):
         the_input = input_class(test_capa_system(), element, state)
 
         context = the_input._get_render_context()  # pylint: disable=protected-access
-
+        prob_id = 'prob_1_2'
         expected = {
             'STATIC_URL': '/dummy-static/',
-            'id': 'prob_1_2',
+            'id': prob_id,
             'value': 'print "good evening"',
             'status': inputtypes.Status('queued'),
             'msg': the_input.submitted_msg,
@@ -424,7 +424,7 @@ class CodeInputTest(unittest.TestCase):
             'aria_label': '{mode} editor'.format(mode=mode),
             'code_mirror_exit_message': 'Press ESC then TAB or click outside of the code editor to exit',
             'response_data': RESPONSE_DATA,
-            'describedby_html': DESCRIBEDBY
+            'describedby_html': DESCRIBEDBY.format(status_id=prob_id)
         }
 
         self.assertEqual(context, expected)
@@ -486,7 +486,7 @@ class MatlabTest(unittest.TestCase):
             'queue_len': '3',
             'matlab_editor_js': '/dummy-static/js/vendor/CodeMirror/octave.js',
             'response_data': {},
-            'describedby_html': ''
+            'describedby_html': 'aria-describedby="status_prob_1_2"'
         }
 
         self.assertEqual(context, expected)
@@ -503,10 +503,10 @@ class MatlabTest(unittest.TestCase):
 
         the_input = self.input_class(test_capa_system(), elt, state)
         context = the_input._get_render_context()  # pylint: disable=protected-access
-
+        prob_id = 'prob_1_2'
         expected = {
             'STATIC_URL': '/dummy-static/',
-            'id': 'prob_1_2',
+            'id': prob_id,
             'value': 'print "good evening"',
             'status': inputtypes.Status('queued'),
             'msg': the_input.submitted_msg,
@@ -521,7 +521,7 @@ class MatlabTest(unittest.TestCase):
             'queue_len': '3',
             'matlab_editor_js': '/dummy-static/js/vendor/CodeMirror/octave.js',
             'response_data': RESPONSE_DATA,
-            'describedby_html': DESCRIBEDBY
+            'describedby_html': DESCRIBEDBY.format(status_id=prob_id)
         }
 
         self.assertEqual(context, expected)
@@ -535,12 +535,12 @@ class MatlabTest(unittest.TestCase):
                 'response_data': RESPONSE_DATA
             }
             elt = etree.fromstring(self.xml)
-
+            prob_id = 'prob_1_2'
             the_input = self.input_class(test_capa_system(), elt, state)
             context = the_input._get_render_context()  # pylint: disable=protected-access
             expected = {
                 'STATIC_URL': '/dummy-static/',
-                'id': 'prob_1_2',
+                'id': prob_id,
                 'value': 'print "good evening"',
                 'status': inputtypes.Status(status),
                 'msg': '',
@@ -555,7 +555,7 @@ class MatlabTest(unittest.TestCase):
                 'queue_len': '0',
                 'matlab_editor_js': '/dummy-static/js/vendor/CodeMirror/octave.js',
                 'response_data': RESPONSE_DATA,
-                'describedby_html': DESCRIBEDBY
+                'describedby_html': DESCRIBEDBY.format(status_id=prob_id)
             }
 
             self.assertEqual(context, expected)
@@ -569,12 +569,12 @@ class MatlabTest(unittest.TestCase):
             'response_data': RESPONSE_DATA
         }
         elt = etree.fromstring(self.xml)
-
+        prob_id = 'prob_1_2'
         the_input = self.input_class(test_capa_system(), elt, state)
         context = the_input._get_render_context()  # pylint: disable=protected-access
         expected = {
             'STATIC_URL': '/dummy-static/',
-            'id': 'prob_1_2',
+            'id': prob_id,
             'value': 'print "good evening"',
             'status': inputtypes.Status('queued'),
             'msg': the_input.submitted_msg,
@@ -589,7 +589,7 @@ class MatlabTest(unittest.TestCase):
             'queue_len': '1',
             'matlab_editor_js': '/dummy-static/js/vendor/CodeMirror/octave.js',
             'response_data': RESPONSE_DATA,
-            'describedby_html': DESCRIBEDBY
+            'describedby_html': DESCRIBEDBY.format(status_id=prob_id)
         }
 
         self.assertEqual(context, expected)
@@ -713,7 +713,7 @@ class MatlabTest(unittest.TestCase):
             \'msg\': u\'Submitted. As soon as a response is returned,
             this message will be replaced by that feedback.\',
             \'matlab_editor_js\': \'/dummy-static/js/vendor/CodeMirror/octave.js\',
-            \'hidden\': \'\', \'id\': \'prob_1_2\', \'describedby_html\': \'\',
+            \'hidden\': \'\', \'id\': \'prob_1_2\', \'describedby_html\': \'aria-describedby="status_prob_1_2"\',
             \'response_data\': {}}</div>
             """).replace('\n', ' ').strip()
         )
@@ -804,9 +804,10 @@ class MatlabTest(unittest.TestCase):
         context = self.the_input._get_render_context()  # pylint: disable=protected-access
 
         self.maxDiff = None
+        prob_id = 'prob_1_2'
         expected = {
             'STATIC_URL': '/dummy-static/',
-            'id': 'prob_1_2',
+            'id': prob_id,
             'value': 'print "good evening"',
             'status': inputtypes.Status('queued'),
             'msg': self.the_input.submitted_msg,
@@ -821,7 +822,7 @@ class MatlabTest(unittest.TestCase):
             'queue_len': '3',
             'matlab_editor_js': '/dummy-static/js/vendor/CodeMirror/octave.js',
             'response_data': {},
-            'describedby_html': ''
+            'describedby_html': 'aria-describedby="status_{id}"'.format(id=prob_id)
         }
 
         self.assertEqual(context, expected)
@@ -917,10 +918,10 @@ class SchematicTest(unittest.TestCase):
         the_input = lookup_tag('schematic')(test_capa_system(), element, state)
 
         context = the_input._get_render_context()  # pylint: disable=protected-access
-
+        prob_id = 'prob_1_2'
         expected = {
             'STATIC_URL': '/dummy-static/',
-            'id': 'prob_1_2',
+            'id': prob_id,
             'value': value,
             'status': inputtypes.Status('unsubmitted'),
             'msg': '',
@@ -932,7 +933,7 @@ class SchematicTest(unittest.TestCase):
             'analyses': analyses,
             'submit_analyses': submit_analyses,
             'response_data': RESPONSE_DATA,
-            'describedby_html': DESCRIBEDBY
+            'describedby_html': DESCRIBEDBY.format(status_id=prob_id)
         }
 
         self.assertEqual(context, expected)
@@ -965,10 +966,10 @@ class ImageInputTest(unittest.TestCase):
         the_input = lookup_tag('imageinput')(test_capa_system(), element, state)
 
         context = the_input._get_render_context()  # pylint: disable=protected-access
-
+        prob_id = 'prob_1_2'
         expected = {
             'STATIC_URL': '/dummy-static/',
-            'id': 'prob_1_2',
+            'id': prob_id,
             'value': value,
             'status': inputtypes.Status('unsubmitted'),
             'width': width,
@@ -978,7 +979,7 @@ class ImageInputTest(unittest.TestCase):
             'gy': egy,
             'msg': '',
             'response_data': RESPONSE_DATA,
-            'describedby_html': DESCRIBEDBY
+            'describedby_html': DESCRIBEDBY.format(status_id=prob_id)
         }
 
         self.assertEqual(context, expected)
@@ -1024,17 +1025,17 @@ class CrystallographyTest(unittest.TestCase):
         the_input = lookup_tag('crystallography')(test_capa_system(), element, state)
 
         context = the_input._get_render_context()  # pylint: disable=protected-access
-
+        prob_id = 'prob_1_2'
         expected = {
             'STATIC_URL': '/dummy-static/',
-            'id': 'prob_1_2',
+            'id': prob_id,
             'value': value,
             'status': inputtypes.Status('unsubmitted'),
             'msg': '',
             'width': width,
             'height': height,
             'response_data': RESPONSE_DATA,
-            'describedby_html': DESCRIBEDBY
+            'describedby_html': DESCRIBEDBY.format(status_id=prob_id)
         }
 
         self.assertEqual(context, expected)
@@ -1070,10 +1071,10 @@ class VseprTest(unittest.TestCase):
         the_input = lookup_tag('vsepr_input')(test_capa_system(), element, state)
 
         context = the_input._get_render_context()  # pylint: disable=protected-access
-
+        prob_id = 'prob_1_2'
         expected = {
             'STATIC_URL': '/dummy-static/',
-            'id': 'prob_1_2',
+            'id': prob_id,
             'value': value,
             'status': inputtypes.Status('unsubmitted'),
             'msg': '',
@@ -1082,7 +1083,7 @@ class VseprTest(unittest.TestCase):
             'molecules': molecules,
             'geometries': geometries,
             'response_data': RESPONSE_DATA,
-            'describedby_html': DESCRIBEDBY
+            'describedby_html': DESCRIBEDBY.format(status_id=prob_id)
         }
 
         self.assertEqual(context, expected)
@@ -1108,17 +1109,17 @@ class ChemicalEquationTest(unittest.TestCase):
     def test_rendering(self):
         ''' Verify that the render context matches the expected render context'''
         context = self.the_input._get_render_context()  # pylint: disable=protected-access
-
+        prob_id = 'prob_1_2'
         expected = {
             'STATIC_URL': '/dummy-static/',
-            'id': 'prob_1_2',
+            'id': prob_id,
             'value': 'H2OYeah',
             'status': inputtypes.Status('unanswered'),
             'msg': '',
             'size': self.size,
             'previewer': '/dummy-static/js/capa/chemical_equation_preview.js',
             'response_data': RESPONSE_DATA,
-            'describedby_html': DESCRIBEDBY
+            'describedby_html': DESCRIBEDBY.format(status_id=prob_id)
         }
         self.assertEqual(context, expected)
 
@@ -1201,10 +1202,10 @@ class FormulaEquationTest(unittest.TestCase):
         Verify that the render context matches the expected render context
         """
         context = self.the_input._get_render_context()  # pylint: disable=protected-access
-
+        prob_id = 'prob_1_2'
         expected = {
             'STATIC_URL': '/dummy-static/',
-            'id': 'prob_1_2',
+            'id': prob_id,
             'value': 'x^2+1/2',
             'status': inputtypes.Status('unanswered'),
             'msg': '',
@@ -1213,7 +1214,7 @@ class FormulaEquationTest(unittest.TestCase):
             'inline': False,
             'trailing_text': '',
             'response_data': RESPONSE_DATA,
-            'describedby_html': DESCRIBEDBY
+            'describedby_html': DESCRIBEDBY.format(status_id=prob_id)
         }
         self.assertEqual(context, expected)
 
@@ -1247,10 +1248,10 @@ class FormulaEquationTest(unittest.TestCase):
             the_input = lookup_tag('formulaequationinput')(test_capa_system(), element, state)
 
             context = the_input._get_render_context()  # pylint: disable=protected-access
-
+            prob_id = 'prob_1_2'
             expected = {
                 'STATIC_URL': '/dummy-static/',
-                'id': 'prob_1_2',
+                'id': prob_id,
                 'value': 'x^2+1/2',
                 'status': inputtypes.Status('unanswered'),
                 'msg': '',
@@ -1259,7 +1260,7 @@ class FormulaEquationTest(unittest.TestCase):
                 'inline': False,
                 'trailing_text': expected_text,
                 'response_data': RESPONSE_DATA,
-                'describedby_html': DESCRIBEDBY
+                'describedby_html': DESCRIBEDBY.format(status_id=prob_id)
             }
 
             self.assertEqual(context, expected)
@@ -1381,17 +1382,17 @@ class DragAndDropTest(unittest.TestCase):
         }
 
         the_input = lookup_tag('drag_and_drop_input')(test_capa_system(), element, state)
-
+        prob_id = 'prob_1_2'
         context = the_input._get_render_context()  # pylint: disable=protected-access
         expected = {
             'STATIC_URL': '/dummy-static/',
-            'id': 'prob_1_2',
+            'id': prob_id,
             'value': value,
             'status': inputtypes.Status('unsubmitted'),
             'msg': '',
             'drag_and_drop_json': json.dumps(user_input),
             'response_data': RESPONSE_DATA,
-            'describedby_html': DESCRIBEDBY
+            'describedby_html': DESCRIBEDBY.format(status_id=prob_id)
         }
 
         # as we are dumping 'draggables' dicts while dumping user_input, string
@@ -1437,10 +1438,10 @@ class AnnotationInputTest(unittest.TestCase):
         the_input = lookup_tag(tag)(test_capa_system(), element, state)
 
         context = the_input._get_render_context()  # pylint: disable=protected-access
-
+        prob_id = 'annotation_input'
         expected = {
             'STATIC_URL': '/dummy-static/',
-            'id': 'annotation_input',
+            'id': prob_id,
             'status': inputtypes.Status('answered'),
             'msg': '',
             'title': 'foo',
@@ -1460,7 +1461,7 @@ class AnnotationInputTest(unittest.TestCase):
             'debug': False,
             'return_to_annotation': True,
             'response_data': RESPONSE_DATA,
-            'describedby_html': DESCRIBEDBY
+            'describedby_html': DESCRIBEDBY.format(status_id=prob_id)
         }
 
         self.maxDiff = None
@@ -1499,9 +1500,10 @@ class TestChoiceText(unittest.TestCase):
   </{tag}>
         """.format(tag=tag, choice_tag=choice_tag)
         element = etree.fromstring(xml_str)
+        prob_id = 'choicetext_input'
         state = {
             'value': '{}',
-            'id': 'choicetext_input',
+            'id': prob_id,
             'status': inputtypes.Status('answered'),
             'response_data': RESPONSE_DATA
         }
@@ -1516,7 +1518,6 @@ class TestChoiceText(unittest.TestCase):
             ('choiceinput_0', [first_choice_content, first_input]),
             ('choiceinput_1', [second_choice_content, second_input, second_choice_text])
         ]
-
         expected = {
             'STATIC_URL': '/dummy-static/',
             'msg': '',
@@ -1525,7 +1526,7 @@ class TestChoiceText(unittest.TestCase):
             'show_correctness': 'always',
             'submitted_message': 'Answer received.',
             'response_data': RESPONSE_DATA,
-            'describedby_html': DESCRIBEDBY
+            'describedby_html': DESCRIBEDBY.format(status_id=prob_id)
         }
         expected.update(state)
         the_input = lookup_tag(tag)(test_capa_system(), element, state)

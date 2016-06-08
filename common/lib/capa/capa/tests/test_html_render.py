@@ -190,7 +190,7 @@ class CapaHtmlRenderTest(unittest.TestCase):
             'trailing_text': '',
             'size': None,
             'response_data': {'label': 'Test question', 'descriptions': {}},
-            'describedby_html': ''
+            'describedby_html': 'aria-describedby="status_1_2_1"'
         }
 
         expected_solution_context = {'id': '1_solution_1'}
