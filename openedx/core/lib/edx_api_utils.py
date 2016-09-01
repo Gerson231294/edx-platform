@@ -79,7 +79,7 @@ def get_edx_api_data(api_config, user, resource,
             results = response
         else:
             results = _traverse_pagination(response, endpoint, querystring, no_data)
-    except:  # pylint: disable=bare-except
+    except Exception as e:  # pylint: disable=bare-except
         log.exception('Failed to retrieve data from the %s API.', api_config.API_NAME)
         return no_data
 

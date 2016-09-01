@@ -141,6 +141,7 @@
                 return view;
             };
             checkCommentForm = function(originallyClosed, mode) {
+                debugger;
                 var view;
                 view = createDiscussionThreadView(originallyClosed, mode);
                 expect(view.$('.comment-form').closest('li').is(':visible')).toBe(!originallyClosed);

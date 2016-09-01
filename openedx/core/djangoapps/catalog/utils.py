@@ -1,7 +1,9 @@
 """Helper functions for working with the catalog service."""
+import logging
 from urlparse import urlparse
 
 from django.conf import settings
+from django.core.cache import cache
 from edx_rest_api_client.client import EdxRestApiClient
 from opaque_keys.edx.keys import CourseKey
 
@@ -10,6 +12,7 @@ from openedx.core.lib.edx_api_utils import get_edx_api_data
 from openedx.core.lib.token_utils import JwtBuilder
 
 
+log = logging.getLogger(__name__)
 def create_catalog_api_client(user, catalog_integration):
     """Returns an API client which can be used to make catalog API requests."""
     scopes = ['email', 'profile']
@@ -114,37 +117,93 @@ def munge_catalog_program(catalog_program):
     }
 
 
-def get_course_run(course_key, user):
+def get_course_runs(user, course_keys=[]):
     """Get a course run's data from the course catalog service.
 
     Arguments:
-        course_key (CourseKey): Course key object identifying the run whose data we want.
+        course_keys (CourseKey): A list of Course key object identifying the run whose data we want.
         user (User): The user to authenticate as when making requests to the catalog service.
 
     Returns:
         dict, empty if no data could be retrieved.
     """
-    catalog_integration = CatalogIntegration.current()
+    try:
+        course_catalog_data = cache.get_many(course_keys)
+        if len(course_catalog_data.keys()) != len(course_keys):
+            found_keys = course_catalog_data.keys()
+            missed_keys = list(set(course_keys) - set(found_keys))
+            log.debug("Catalog data not found in cache against Course Keys: '{}'".format(",".join(missed_keys)))
 
-    if catalog_integration.enabled:
-        api = create_catalog_api_client(user, catalog_integration)
+            catalog_integration = CatalogIntegration.current()
+            if catalog_integration.enabled:
+                api = create_catalog_api_client(user, catalog_integration)
 
-        data = get_edx_api_data(
-            catalog_integration,
-            user,
-            'course_runs',
-            resource_id=unicode(course_key),
-            cache_key=catalog_integration.CACHE_KEY if catalog_integration.is_cache_enabled else None,
-            api=api,
-            querystring={'exclude_utm': 1},
-        )
+                catalog_data = get_edx_api_data(
+                    catalog_integration,
+                    user,
+                    'course_runs',
+                    api=api,
+                    querystring={'keys': ",".join(missed_keys), 'exclude_utm': 1},
+                )
+                if catalog_data:
+                    log.debug("no. of results: {}".format(catalog_data["count"]))
+                    for data in catalog_data["results"]:
+                        log.debug("course_key: {}, marketing_url: {}".format(data["key"], data["marketing_url"]))
+                        course_catalog_data[data["key"]] = data
+        # data = get_edx_api_data(
+        #     catalog_integration,
+        #     user,
+        #     'course_runs',
+        #     resource_id=unicode(course_key),
+        #     cache_key=catalog_integration.CACHE_KEY if catalog_integration.is_cache_enabled else None,
+        #     api=api,
+        #     querystring={'exclude_utm': 1},
+        # )
 
-        return data if data else {}
-    else:
-        return {}
+
+        return course_catalog_data
+    except Exception as e:
+        log.debug("error occured: {}".format(e.message))
+
+    # if catalog_integration.enabled:
+    #     api = create_catalog_api_client(user, catalog_integration)
+    #
+    #     data = get_edx_api_data(
+    #         catalog_integration,
+    #         user,
+    #         'course_runs',
+    #         resource_id=unicode(course_key),
+    #         cache_key=catalog_integration.CACHE_KEY if catalog_integration.is_cache_enabled else None,
+    #         api=api,
+    #     )
+    #
+    #     return data if data else {}
+    # else:
+    #     return {}
 
 
-def get_run_marketing_url(course_key, user):
+
+# def get_run_marketing_url(course_key, user):
+#     """Get a course run's marketing URL from the course catalog service.
+#
+#     Arguments:
+#         course_key (CourseKey): Course key object identifying the run whose marketing URL we want.
+#         user (User): The user to authenticate as when making requests to the catalog service.
+#
+#     Returns:
+#         string, the marketing URL, or None if no URL is available.
+#     """
+#     course_run = get_course_run(course_key, user)
+#     marketing_url = course_run.get('marketing_url')
+#
+#     if marketing_url:
+#         # This URL may include unwanted UTM parameters in the querystring.
+#         # For more, see https://en.wikipedia.org/wiki/UTM_parameters.
+#         return strip_querystring(marketing_url)
+#     else:
+#         return None
+
+def get_run_marketing_urls(user, course_keys=[]):
     """Get a course run's marketing URL from the course catalog service.
 
     Arguments:
@@ -154,5 +213,35 @@ def get_run_marketing_url(course_key, user):
     Returns:
         string, the marketing URL, or None if no URL is available.
     """
-    course_run = get_course_run(course_key, user)
-    return course_run.get('marketing_url')
+    
+    # from merging
+    # course_run = get_course_run(course_key, user)
+    # return course_run.get('marketing_url')
+    
+    
+    course_marketing_url_dict = {}
+    course_catalog_dict = get_course_runs(user, course_keys)
+    if not course_catalog_dict:
+        return course_marketing_url_dict
+
+    for course_key in course_keys:
+        if course_key in course_catalog_dict:
+            marketing_url = course_catalog_dict[course_key].get('marketing_url')
+
+            if marketing_url:
+                # This URL may include unwanted UTM parameters in the querystring.
+                # For more, see https://en.wikipedia.org/wiki/UTM_parameters.
+                #return strip_querystring(marketing_url)
+                course_marketing_url_dict[course_key] = strip_querystring(marketing_url)
+
+    return course_marketing_url_dict
+
+
+def strip_querystring(url):
+    """Strip the querystring from the provided URL.
+
+    urlparse's ParseResult is a subclass of namedtuple. _replace is part of namedtuple's
+    public API: https://docs.python.org/2/library/collections.html#collections.somenamedtuple._replace.
+    The name starts with an underscore to prevent conflicts with field names.
+    """
+    return urlparse(url)._replace(query='').geturl()  # pylint: disable=no-member

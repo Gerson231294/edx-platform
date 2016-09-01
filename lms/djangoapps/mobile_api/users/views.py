@@ -277,11 +277,15 @@ class UserCourseEnrollmentsList(generics.ListAPIView):
         return check_org is None or (check_org.lower() == course_org.lower())
 
     def get_queryset(self):
+        course_ids = set(self.queryset.values_list('course_id', flat=True))
+        CourseEnrollmentSerializer.set_course_catalog(self.request.user, course_ids)
+
         enrollments = self.queryset.filter(
             user__username=self.kwargs['username'],
             is_active=True
         ).order_by('created').reverse()
         org = self.request.query_params.get('org', None)
+
         return [
             enrollment for enrollment in enrollments
             if enrollment.course_overview and self.is_org(org, enrollment.course_overview.org) and

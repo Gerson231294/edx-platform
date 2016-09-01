@@ -179,7 +179,7 @@ class TestGetCourseRun(mixins.CatalogIntegrationMixin, TestCase):
         course_run = factories.CourseRun()
         mock_get_catalog_data.return_value = course_run
 
-        data = utils.get_course_run(self.course_key, self.user)
+        data = utils.get_course_runs(self.user, [self.course_key])
 
         self.assert_contract(mock_get_catalog_data.call_args)
         self.assertEqual(data, course_run)
@@ -187,13 +187,13 @@ class TestGetCourseRun(mixins.CatalogIntegrationMixin, TestCase):
     def test_course_run_unavailable(self, _mock_cache, mock_get_catalog_data):
         mock_get_catalog_data.return_value = []
 
-        data = utils.get_course_run(self.course_key, self.user)
+        data = utils.get_course_runs(self.user, [self.course_key])
 
         self.assert_contract(mock_get_catalog_data.call_args)
         self.assertEqual(data, {})
 
     def test_cache_disabled(self, _mock_cache, mock_get_catalog_data):
-        utils.get_course_run(self.course_key, self.user)
+        utils.get_course_runs(self.user, [self.course_key])
 
         _, kwargs = self.assert_contract(mock_get_catalog_data.call_args)
 
@@ -202,7 +202,7 @@ class TestGetCourseRun(mixins.CatalogIntegrationMixin, TestCase):
     def test_cache_enabled(self, _mock_cache, mock_get_catalog_data):
         catalog_integration = self.create_catalog_integration(cache_ttl=1)
 
-        utils.get_course_run(self.course_key, self.user)
+        utils.get_course_runs(self.user, [self.course_key])
 
         _, kwargs = mock_get_catalog_data.call_args
 
@@ -212,7 +212,7 @@ class TestGetCourseRun(mixins.CatalogIntegrationMixin, TestCase):
         """Verify that no errors occur if this method is called when catalog config is missing."""
         CatalogIntegration.objects.all().delete()
 
-        data = utils.get_course_run(self.course_key, self.user)
+        data = utils.get_course_runs(self.user, [self.course_key])
         self.assertEqual(data, {})
 
 
@@ -229,13 +229,13 @@ class TestGetRunMarketingUrl(TestCase):
         course_run = factories.CourseRun()
         mock_get_course_run.return_value = course_run
 
-        url = utils.get_run_marketing_url(self.course_key, self.user)
+        url = utils.get_run_marketing_urls(self.user, [self.course_key])
 
         self.assertEqual(url, course_run['marketing_url'])
 
     def test_marketing_url_missing(self, mock_get_course_run):
         mock_get_course_run.return_value = {}
 
-        url = utils.get_run_marketing_url(self.course_key, self.user)
+        url = utils.get_run_marketing_urls(self.user, [self.course_key])
 
         self.assertEqual(url, None)
