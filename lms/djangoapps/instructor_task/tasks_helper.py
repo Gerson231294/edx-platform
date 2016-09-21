@@ -47,6 +47,7 @@ from certificates.models import (
 from certificates.api import generate_user_certificates
 from courseware.courses import get_course_by_id, get_problems_in_section
 from lms.djangoapps.grades.course_grades import iterate_grades_for
+from course_modes.models import CourseMode
 from courseware.models import StudentModule
 from courseware.model_data import DjangoKeyValueStore, FieldDataCache
 from courseware.module_render import get_module_for_descriptor_internal
@@ -1428,10 +1429,6 @@ def generate_students_certificates(
     elif student_set == "specific_student":
         specific_student_id = task_input.get('specific_student_id')
         students_to_generate_certs_for = students_to_generate_certs_for.filter(id=specific_student_id)
-
-    # Verified users with audit passing and not passing certificate statuses.
-    elif student_set == "verified_users_with_audit_certs":
-        students_to_generate_certs_for = CourseEnrollment.objects.users_enrolled_in(course_id, mode='verified')
 
     task_progress = TaskProgress(action_name, students_to_generate_certs_for.count(), start_time)
 
