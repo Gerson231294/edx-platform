@@ -142,7 +142,7 @@ class StaffDebugTest(CourseWithoutContentGroupsTest):
         self.assertEqual(u'Successfully reset the attempts '
                          'for user {}'.format(self.USERNAME), msg)
 
-    def test_rescore_state(self):
+    def test_rescore_problem(self):
         """
         Rescore the student
         """
@@ -153,6 +153,18 @@ class StaffDebugTest(CourseWithoutContentGroupsTest):
         staff_debug_page.rescore()
         msg = staff_debug_page.idash_msg[0]
         self.assertEqual(u'Successfully rescored problem for user STAFF_TESTER', msg)
+
+    def test_rescore_problem_if_higher(self):
+        """
+        Rescore the student
+        """
+        staff_page = self._goto_staff_page()
+        staff_page.answer_problem()
+
+        staff_debug_page = staff_page.open_staff_debug_info()
+        staff_debug_page.rescore_if_higher()
+        msg = staff_debug_page.idash_msg[0]
+        self.assertEqual(u'Successfully rescored problem (if higher) for user STAFF_TESTER', msg)
 
     def test_student_state_delete(self):
         """

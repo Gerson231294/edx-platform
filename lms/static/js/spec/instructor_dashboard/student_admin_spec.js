@@ -93,7 +93,8 @@ define(['jquery', 'coffee/src/instructor_dashboard/student_admin', 'edx-ui-toolk
                 studentadmin.$btn_rescore_entrance_exam.click();
                 // Verify that the client contacts the server to start instructor task
                 var params = $.param({
-                    unique_student_identifier: unique_student_identifier
+                    unique_student_identifier: unique_student_identifier,
+                    only_if_higher: false
                 });
                 var url = dashboard_api_url + '/rescore_entrance_exam';
                 AjaxHelpers.expectPostRequest(requests, url, params);
@@ -112,7 +113,8 @@ define(['jquery', 'coffee/src/instructor_dashboard/student_admin', 'edx-ui-toolk
                 studentadmin.$btn_rescore_entrance_exam.click();
                 // Verify that the client contacts the server to start instructor task
                 var params = $.param({
-                    unique_student_identifier: unique_student_identifier
+                    unique_student_identifier: unique_student_identifier,
+                    only_if_higher: false
                 });
                 var url = dashboard_api_url + '/rescore_entrance_exam';
                 AjaxHelpers.expectPostRequest(requests, url, params);

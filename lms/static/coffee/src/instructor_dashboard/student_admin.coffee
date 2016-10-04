@@ -38,6 +38,7 @@ class @StudentAdmin
     @$btn_reset_attempts_single   = find_and_assert @$section, "input[name='reset-attempts-single']"
     @$btn_delete_state_single     = @$section.find "input[name='delete-state-single']"
     @$btn_rescore_problem_single  = @$section.find "input[name='rescore-problem-single']"
+    @$btn_rescore_problem_if_higher_single = @$section.find "input[name='rescore-problem-if-higher-single']"
     @$btn_task_history_single     = @$section.find "input[name='task-history-single']"
     @$table_task_history_single   = @$section.find ".task-history-single-table"
 
@@ -46,6 +47,7 @@ class @StudentAdmin
     @$btn_reset_entrance_exam_attempts   = @$section.find "input[name='reset-entrance-exam-attempts']"
     @$btn_delete_entrance_exam_state     = @$section.find "input[name='delete-entrance-exam-state']"
     @$btn_rescore_entrance_exam          = @$section.find "input[name='rescore-entrance-exam']"
+    @$btn_rescore_entrance_exam_if_higher = @$section.find "input[name='rescore-entrance-exam-if-higher']"
     @$btn_skip_entrance_exam             = @$section.find "input[name='skip-entrance-exam']"
     @$btn_entrance_exam_task_history     = @$section.find "input[name='entrance-exam-task-history']"
     @$table_entrance_exam_task_history   = @$section.find ".entrance-exam-task-history-table"
@@ -54,6 +56,7 @@ class @StudentAdmin
     @$field_problem_select_all    = @$section.find "input[name='problem-select-all']"
     @$btn_reset_attempts_all      = @$section.find "input[name='reset-attempts-all']"
     @$btn_rescore_problem_all     = @$section.find "input[name='rescore-problem-all']"
+    @$btn_rescore_problem_if_higher_all = @$section.find "input[name='rescore-problem-all-if-higher']"
     @$btn_task_history_all        = @$section.find "input[name='task-history-all']"
     @$table_task_history_all      = @$section.find ".task-history-all-table"
     @instructor_tasks             = new (PendingInstructorTasks()) @$section
@@ -61,8 +64,8 @@ class @StudentAdmin
     # response areas
     @$request_response_error_progress = find_and_assert @$section, ".student-specific-container .request-response-error"
     @$request_response_error_grade = find_and_assert @$section, ".student-grade-container .request-response-error"
-    @$request_response_error_ee       = @$section.find ".entrance-exam-grade-container .request-response-error"
-    @$request_response_error_all    = @$section.find ".course-specific-container .request-response-error"
+    @$request_response_error_ee    = @$section.find ".entrance-exam-grade-container .request-response-error"
+    @$request_response_error_all   = @$section.find ".course-specific-container .request-response-error"
 
     # attach click handlers
 
@@ -141,27 +144,11 @@ class @StudentAdmin
 
     # start task to rescore problem for student
     @$btn_rescore_problem_single.click =>
-      unique_student_identifier = @$field_student_select_grade.val()
-      problem_to_reset = @$field_problem_select_single.val()
-      if not unique_student_identifier
-        return @$request_response_error_grade.text gettext("Please enter a student email address or username.")
-      if not problem_to_reset
-        return @$request_response_error_grade.text gettext("Please enter a problem location.")
-      send_data =
-        unique_student_identifier: unique_student_identifier
-        problem_to_reset: problem_to_reset
-      success_message = gettext("Started rescore problem task for problem '<%= problem_id %>' and student '<%= student_id %>'. Click the 'Show Background Task History for Student' button to see the status of the task.")
-      full_success_message = _.template(success_message)({student_id: unique_student_identifier, problem_id: problem_to_reset})
-      error_message = gettext("Error starting a task to rescore problem '<%= problem_id %>' for student '<%= student_id %>'. Make sure that the the problem and student identifiers are complete and correct.")
-      full_error_message = _.template(error_message)({student_id: unique_student_identifier, problem_id: problem_to_reset})
+      @rescore_problem_single false
 
-      $.ajax
-        type: 'POST'
-        dataType: 'json'
-        url: @$btn_rescore_problem_single.data 'endpoint'
-        data: send_data
-        success: @clear_errors_then -> alert full_success_message
-        error: std_ajax_err => @$request_response_error_grade.text full_error_message
+    # start task to rescore problem for student
+    @$btn_rescore_problem_if_higher_single.click =>
+      @rescore_problem_single true
 
     # list task history for student+problem
     @$btn_task_history_single.click =>
@@ -211,25 +198,10 @@ class @StudentAdmin
 
    # start task to rescore entrance exam for student
     @$btn_rescore_entrance_exam.click =>
-      unique_student_identifier = @$field_entrance_exam_student_select_grade.val()
-      if not unique_student_identifier
-        return @$request_response_error_ee.text gettext("Please enter a student email address or username.")
-      send_data =
-        unique_student_identifier: unique_student_identifier
+      @rescore_entrance_exam_all false
 
-      $.ajax
-        type: 'POST'
-        dataType: 'json'
-        url: @$btn_rescore_entrance_exam.data 'endpoint'
-        data: send_data
-        success: @clear_errors_then ->
-          success_message = gettext("Started entrance exam rescore task for student '{student_id}'. Click the 'Show Background Task History for Student' button to see the status of the task.")
-          full_success_message = interpolate_text(success_message, {student_id: unique_student_identifier})
-          alert full_success_message
-        error: std_ajax_err =>
-          error_message = gettext("Error starting a task to rescore entrance exam for student '{student_id}'. Make sure that entrance exam has problems in it and student identifier is correct.")
-          full_error_message = interpolate_text(error_message, {student_id: unique_student_identifier})
-          @$request_response_error_ee.text full_error_message
+    @$btn_rescore_entrance_exam_if_higher.click =>
+      @rescore_entrance_exam_all true
 
   # Mark a student to skip entrance exam
     @$btn_skip_entrance_exam.click =>
@@ -325,30 +297,10 @@ class @StudentAdmin
 
     # start task to rescore problem for all students
     @$btn_rescore_problem_all.click =>
-      problem_to_reset = @$field_problem_select_all.val()
-      if not problem_to_reset
-        return @$request_response_error_all.text gettext("Please enter a problem location.")
-      confirm_message = gettext("Rescore problem '<%= problem_id %>' for all students?")
-      full_confirm_message = _.template(confirm_message)({problem_id: problem_to_reset})
-      if window.confirm full_confirm_message
-        send_data =
-          all_students: true
-          problem_to_reset: problem_to_reset
-        success_message = gettext("Successfully started task to rescore problem '<%= problem_id %>' for all students. Click the 'Show Background Task History for Problem' button to see the status of the task.")
-        full_success_message = _.template(success_message)({problem_id: problem_to_reset})
-        error_message = gettext("Error starting a task to rescore problem '<%= problem_id %>'. Make sure that the problem identifier is complete and correct.")
-        full_error_message = _.template(error_message)({problem_id: problem_to_reset})
+      @rescore_problem_all false
 
-        $.ajax
-          type: 'POST'
-          dataType: 'json'
-          url: @$btn_rescore_problem_all.data 'endpoint'
-          data: send_data
-          success: @clear_errors_then -> alert full_success_message
-          error: std_ajax_err => @$request_response_error_all.text full_error_message
-      else
-        # Clear error messages if "Cancel" was chosen on confirmation alert
-        @clear_errors()
+    @$btn_rescore_problem_if_higher_all.click =>
+      @rescore_problem_all true
 
     # list task history for problem
     @$btn_task_history_all.click =>
@@ -366,6 +318,79 @@ class @StudentAdmin
         success: @clear_errors_then (data) =>
           create_task_list_table @$table_task_history_all, data.tasks
         error: std_ajax_err => @$request_response_error_all.text gettext("Error listing task history for this student and problem.")
+
+  rescore_problem_single: (only_if_higher) ->
+    unique_student_identifier = @$field_student_select_grade.val()
+    problem_to_reset = @$field_problem_select_single.val()
+    if not unique_student_identifier
+      return @$request_response_error_grade.text gettext("Please enter a student email address or username.")
+    if not problem_to_reset
+      return @$request_response_error_grade.text gettext("Please enter a problem location.")
+    send_data =
+      unique_student_identifier: unique_student_identifier
+      problem_to_reset: problem_to_reset
+      only_if_higher: only_if_higher
+    success_message = gettext("Started rescore problem task for problem '<%= problem_id %>' and student '<%= student_id %>'. Click the 'Show Background Task History for Student' button to see the status of the task.")
+    full_success_message = _.template(success_message)({student_id: unique_student_identifier, problem_id: problem_to_reset})
+    error_message = gettext("Error starting a task to rescore problem '<%= problem_id %>' for student '<%= student_id %>'. Make sure that the the problem and student identifiers are complete and correct.")
+    full_error_message = _.template(error_message)({student_id: unique_student_identifier, problem_id: problem_to_reset})
+
+    $.ajax
+      type: 'POST'
+      dataType: 'json'
+      url: @$btn_rescore_problem_single.data 'endpoint'
+      data: send_data
+      success: @clear_errors_then -> alert full_success_message
+      error: std_ajax_err => @$request_response_error_grade.text full_error_message
+
+  rescore_problem_all: (only_if_higher) ->
+    problem_to_reset = @$field_problem_select_all.val()
+    if not problem_to_reset
+      return @$request_response_error_all.text gettext("Please enter a problem location.")
+    confirm_message = gettext("Rescore problem '<%= problem_id %>' for all students?")
+    full_confirm_message = _.template(confirm_message)({problem_id: problem_to_reset})
+    if window.confirm full_confirm_message
+      send_data =
+        all_students: true
+        problem_to_reset: problem_to_reset
+        only_if_higher: only_if_higher
+      success_message = gettext("Successfully started task to rescore problem '<%= problem_id %>' for all students. Click the 'Show Background Task History for Problem' button to see the status of the task.")
+      full_success_message = _.template(success_message)({problem_id: problem_to_reset})
+      error_message = gettext("Error starting a task to rescore problem '<%= problem_id %>'. Make sure that the problem identifier is complete and correct.")
+      full_error_message = _.template(error_message)({problem_id: problem_to_reset})
+
+      $.ajax
+        type: 'POST'
+        dataType: 'json'
+        url: @$btn_rescore_problem_all.data 'endpoint'
+        data: send_data
+        success: @clear_errors_then -> alert full_success_message
+        error: std_ajax_err => @$request_response_error_all.text full_error_message
+    else
+      # Clear error messages if "Cancel" was chosen on confirmation alert
+      @clear_errors()
+
+  rescore_entrance_exam_all: (only_if_higher) ->
+    unique_student_identifier = @$field_entrance_exam_student_select_grade.val()
+    if not unique_student_identifier
+      return @$request_response_error_ee.text gettext("Please enter a student email address or username.")
+    send_data =
+      unique_student_identifier: unique_student_identifier
+      only_if_higher: only_if_higher
+
+    $.ajax
+      type: 'POST'
+      dataType: 'json'
+      url: @$btn_rescore_entrance_exam.data 'endpoint'
+      data: send_data
+      success: @clear_errors_then ->
+        success_message = gettext("Started entrance exam rescore task for student '{student_id}'. Click the 'Show Background Task History for Student' button to see the status of the task.")
+        full_success_message = interpolate_text(success_message, {student_id: unique_student_identifier})
+        alert full_success_message
+      error: std_ajax_err =>
+        error_message = gettext("Error starting a task to rescore entrance exam for student '{student_id}'. Make sure that entrance exam has problems in it and student identifier is correct.")
+        full_error_message = interpolate_text(error_message, {student_id: unique_student_identifier})
+        @$request_response_error_ee.text full_error_message
 
   # wraps a function, but first clear the error displays
   clear_errors_then: (cb) ->

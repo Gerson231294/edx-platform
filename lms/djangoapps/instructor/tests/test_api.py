@@ -3469,6 +3469,15 @@ class TestEntranceExamInstructorAPIRegradeTask(SharedModuleStoreTestCase, LoginE
         })
         self.assertEqual(response.status_code, 200)
 
+    def test_rescore_entrance_exam_if_higher_all_student(self):
+        """ Test rescoring for all students only if higher. """
+        url = reverse('rescore_entrance_exam', kwargs={'course_id': unicode(self.course.id)})
+        response = self.client.post(url, {
+            'all_students': True,
+            'only_if_higher': True,
+        })
+        self.assertEqual(response.status_code, 200)
+
     def test_rescore_entrance_exam_all_student_and_single(self):
         """ Test re-scoring with both all students and single student parameters. """
         url = reverse('rescore_entrance_exam', kwargs={'course_id': unicode(self.course.id)})

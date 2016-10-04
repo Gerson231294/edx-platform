@@ -2086,6 +2086,7 @@ def rescore_problem(request, course_id):
     all_students and unique_student_identifier cannot both be present.
     """
     course_id = SlashSeparatedCourseKey.from_deprecated_string(course_id)
+    only_if_higher = request.POST.get('only_if_higher', None)
     problem_to_reset = strip_if_string(request.POST.get('problem_to_reset'))
     student_identifier = request.POST.get('unique_student_identifier', None)
     student = None
@@ -2107,19 +2108,26 @@ def rescore_problem(request, course_id):
     except InvalidKeyError:
         return HttpResponseBadRequest("Unable to parse problem id")
 
-    response_payload = {}
-    response_payload['problem_to_reset'] = problem_to_reset
+    response_payload = {'problem_to_reset': problem_to_reset}
 
     if student:
         response_payload['student'] = student_identifier
-        lms.djangoapps.instructor_task.api.submit_rescore_problem_for_student(request, module_state_key, student)
-        response_payload['task'] = 'created'
+        lms.djangoapps.instructor_task.api.submit_rescore_problem_for_student(
+            request,
+            module_state_key,
+            student,
+            only_if_higher,
+        )
     elif all_students:
-        lms.djangoapps.instructor_task.api.submit_rescore_problem_for_all_students(request, module_state_key)
-        response_payload['task'] = 'created'
+        lms.djangoapps.instructor_task.api.submit_rescore_problem_for_all_students(
+            request,
+            module_state_key,
+            only_if_higher,
+        )
     else:
         return HttpResponseBadRequest()
 
+    response_payload['task'] = 'created'
     return JsonResponse(response_payload)
 
 
@@ -2146,6 +2154,7 @@ def rescore_entrance_exam(request, course_id):
     )
 
     student_identifier = request.POST.get('unique_student_identifier', None)
+    only_if_higher = request.POST.get('only_if_higher', None)
     student = None
     if student_identifier is not None:
         student = get_student_from_identifier(student_identifier)
@@ -2172,7 +2181,10 @@ def rescore_entrance_exam(request, course_id):
         response_payload['student'] = student_identifier
     else:
         response_payload['student'] = _("All Students")
-    lms.djangoapps.instructor_task.api.submit_rescore_entrance_exam_for_student(request, entrance_exam_key, student)
+
+    lms.djangoapps.instructor_task.api.submit_rescore_entrance_exam_for_student(
+        request, entrance_exam_key, student, only_if_higher,
+    )
     response_payload['task'] = 'created'
     return JsonResponse(response_payload)
 

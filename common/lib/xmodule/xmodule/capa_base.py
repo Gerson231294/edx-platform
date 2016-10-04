@@ -30,6 +30,7 @@ from xmodule.capa_base_constants import RANDOMIZATION, SHOWANSWER
 from django.conf import settings
 
 from openedx.core.djangolib.markup import HTML, Text
+from openedx.core.lib.grade_utils import compare_scores
 
 log = logging.getLogger("edx.courseware")
 
@@ -1048,7 +1049,7 @@ class CapaMixin(CapaFields):
 
         return answers
 
-    def publish_grade(self):
+    def publish_grade(self, only_if_higher=None):
         """
         Publishes the student's current grade to the system as an event
         """
@@ -1059,6 +1060,7 @@ class CapaMixin(CapaFields):
             {
                 'value': score['score'],
                 'max_value': score['total'],
+                'only_if_higher': only_if_higher,
             }
         )
 
@@ -1370,12 +1372,15 @@ class CapaMixin(CapaFields):
 
         return input_metadata
 
-    def rescore_problem(self):
+    def rescore_problem(self, only_if_higher):
         """
         Checks whether the existing answers to a problem are correct.
 
         This is called when the correct answer to a problem has been changed,
         and the grade should be re-evaluated.
+
+        If only_if_higher is True, the answer and grade is updated
+        only if the resulting score is higher than before.
 
         Returns a dict with one key:
             {'success' : 'correct' | 'incorrect' | AJAX alert msg string }
@@ -1424,13 +1429,26 @@ class CapaMixin(CapaFields):
                 return {'success': msg}
             raise
 
+        new_score = self.lcp.get_score()
+
+        if only_if_higher:
+            is_higher, orig_percentage, new_percentage = compare_scores(
+                orig_score['score'], orig_score['total'], new_score['score'], new_score['total'],
+            )
+            if not is_higher:
+                return {
+                    'success': u"New score {} is not higher than original score {}.".format(
+                        new_percentage,
+                        orig_percentage,
+                    )
+                }
+
         # rescoring should have no effect on attempts, so don't
         # need to increment here, or mark done.  Just save.
         self.set_state_from_lcp()
 
-        self.publish_grade()
+        self.publish_grade(only_if_higher)
 
-        new_score = self.lcp.get_score()
         event_info['new_score'] = new_score['score']
         event_info['new_total'] = new_score['total']
 

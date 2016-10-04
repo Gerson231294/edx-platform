@@ -83,4 +83,11 @@ def enqueue_update(sender, **kwargs):  # pylint: disable=unused-argument
     """
     Handles the SCORE_CHANGED signal by enqueueing an update operation to occur asynchronously.
     """
-    recalculate_subsection_grade.apply_async(args=(kwargs['user_id'], kwargs['course_id'], kwargs['usage_id']))
+    recalculate_subsection_grade.apply_async(
+        args=(
+            kwargs['user_id'],
+            kwargs['course_id'],
+            kwargs['usage_id'],
+            kwargs.get('only_if_higher'),
+        )
+    )

@@ -18,13 +18,16 @@ from .new.subsection_grade import SubsectionGradeFactory
 
 
 @task(routing_key=settings.RECALCULATE_GRADES_ROUTING_KEY)
-def recalculate_subsection_grade(user_id, course_id, usage_id):
+def recalculate_subsection_grade(user_id, course_id, usage_id, only_if_higher):
     """
     Updates a saved subsection grade.
     This method expects the following parameters:
        - user_id: serialized id of applicable User object
        - course_id: Unicode string representing the course
        - usage_id: Unicode string indicating the courseware instance
+       - only_if_higher: boolean indicating whether grades should
+        be updated only if the new grade is higher than the previous
+        value.
     """
     course_key = CourseLocator.from_string(course_id)
     if not PersistentGradesEnabledFlag.feature_enabled(course_key):
@@ -50,5 +53,7 @@ def recalculate_subsection_grade(user_id, course_id, usage_id):
             collected_block_structure=collected_block_structure,
         )
         subsection_grade_factory.update(
-            transformed_subsection_structure[subsection_usage_key], transformed_subsection_structure
+            transformed_subsection_structure[subsection_usage_key],
+            transformed_subsection_structure,
+            only_if_higher,
         )

@@ -8,14 +8,13 @@ from contextlib import contextmanager
 
 import ddt
 
-from ..helpers import UniqueCourseTest, auto_auth, create_multiple_choice_problem
+from ..helpers import UniqueCourseTest, auto_auth, create_multiple_choice_problem, get_modal_alert
 from ...fixtures.course import CourseFixture, XBlockFixtureDesc
 from ...pages.common.logout import LogoutPage
 from ...pages.lms.courseware import CoursewarePage
-from ...pages.lms.instructor_dashboard import InstructorDashboardPage
+from ...pages.lms.instructor_dashboard import InstructorDashboardPage, StudentSpecificAdmin
 from ...pages.lms.problem import ProblemPage
 from ...pages.lms.progress import ProgressPage
-from ...pages.lms.staff_view import StaffPage, StaffDebugPage
 from ...pages.studio.component_editor import ComponentEditorView
 from ...pages.studio.utils import type_in_codemirror
 from ...pages.studio.overview import CourseOutlinePage
@@ -56,13 +55,13 @@ class ProgressPageBaseTest(UniqueCourseTest):
             self.course_info['display_name']
         )
 
+        self.problem1 = create_multiple_choice_problem(self.PROBLEM_NAME)
+        self.problem2 = create_multiple_choice_problem(self.PROBLEM_NAME_2)
+
         self.course_fix.add_children(
             XBlockFixtureDesc('chapter', self.SECTION_NAME).add_children(
                 XBlockFixtureDesc('sequential', self.SUBSECTION_NAME).add_children(
-                    XBlockFixtureDesc('vertical', self.UNIT_NAME).add_children(
-                        create_multiple_choice_problem(self.PROBLEM_NAME),
-                        create_multiple_choice_problem(self.PROBLEM_NAME_2)
-                    )
+                    XBlockFixtureDesc('vertical', self.UNIT_NAME).add_children(self.problem1, self.problem2)
                 )
             )
         ).install()
@@ -162,16 +161,23 @@ class PersistentGradesTest(ProgressPageBaseTest):
             subsection.set_staff_lock(locked)
             self.assertEqual(subsection.has_staff_lock_warning, locked)
 
+    def _get_problem_in_studio(self):
+        """
+        Returns the editable problem component in studio.
+        """
+        self.course_outline.visit()
+        self.course_outline.section_at(0).subsection_at(0).expand_subsection()
+        unit = self.course_outline.section_at(0).subsection_at(0).unit(self.UNIT_NAME).go_to()
+        component = unit.xblocks[1]
+        return component
+
     def _change_weight_for_problem(self):
         """
         Changes the weight of the problem, which should not affect
         persisted grades.
         """
         with self._logged_in_session(staff=True):
-            self.course_outline.visit()
-            self.course_outline.section_at(0).subsection_at(0).expand_subsection()
-            unit = self.course_outline.section_at(0).subsection_at(0).unit(self.UNIT_NAME).go_to()
-            component = unit.xblocks[1]
+            component = self._get_problem_in_studio()
             component.edit()
             component_editor = ComponentEditorView(self.browser, component.locator)
             component_editor.set_field_value_and_save('Problem Weight', 5)
@@ -182,10 +188,7 @@ class PersistentGradesTest(ProgressPageBaseTest):
         Should not affect persisted grades.
         """
         with self._logged_in_session(staff=True):
-            self.course_outline.visit()
-            self.course_outline.section_at(0).subsection_at(0).expand_subsection()
-            unit = self.course_outline.section_at(0).subsection_at(0).unit(self.UNIT_NAME).go_to()
-            component = unit.xblocks[1]
+            component = self._get_problem_in_studio()
             modal = component.edit()
 
             # Set content in the CodeMirror editor.
@@ -199,15 +202,15 @@ class PersistentGradesTest(ProgressPageBaseTest):
         deleting the student user's state for the problem.
         """
         with self._logged_in_session(staff=True):
-            self.courseware_page.visit()
-            staff_page = StaffPage(self.browser, self.course_id)
-            self.assertEqual(staff_page.staff_view_mode, "Staff")
-            staff_page.q(css='a.instructor-info-action').nth(1).click()
-            staff_debug_page = StaffDebugPage(self.browser)
-            staff_debug_page.wait_for_page()
-            staff_debug_page.delete_state(self.USERNAME)
-            msg = staff_debug_page.idash_msg[0]
-            self.assertEqual(u'Successfully deleted student state for user {0}'.format(self.USERNAME), msg)
+            self.instructor_dashboard_page.visit()
+            student_admin_section = self.instructor_dashboard_page.select_student_admin(StudentSpecificAdmin)
+            student_admin_section.set_student_email_or_username(self.USERNAME)
+            student_admin_section.set_problem_location(self.problem1.locator)
+            student_admin_section.delete_state_button.click()
+            alert = get_modal_alert(student_admin_section.browser)
+            alert.accept()
+            alert = get_modal_alert(student_admin_section.browser)
+            alert.dismiss()
 
     @ddt.data(
         _edit_problem_content,
@@ -215,8 +218,7 @@ class PersistentGradesTest(ProgressPageBaseTest):
         _change_weight_for_problem
     )
     def test_content_changes_do_not_change_score(self, edit):
-        with self._logged_in_session():
-            self._check_progress_page_with_scored_problem()
+        self._check_progress_page_with_scored_problem()
 
         edit(self)
 
@@ -224,9 +226,8 @@ class PersistentGradesTest(ProgressPageBaseTest):
             self.assertEqual(self._get_problem_scores(), [(1, 1), (0, 1)])
             self.assertEqual(self._get_section_score(), (1, 2))
 
-    def test_visibility_change_does_affect_score(self):
-        with self._logged_in_session():
-            self._check_progress_page_with_scored_problem()
+    def test_visibility_change_affects_score(self):
+        self._check_progress_page_with_scored_problem()
 
         self._set_staff_lock_on_subsection(True)
 
@@ -240,7 +241,7 @@ class PersistentGradesTest(ProgressPageBaseTest):
             self.assertEqual(self._get_problem_scores(), [(1, 1), (0, 1)])
             self.assertEqual(self._get_section_score(), (1, 2))
 
-    def test_progress_page_updates_when_student_state_deleted(self):
+    def test_delete_student_state_affects_score(self):
         self._check_progress_page_with_scored_problem()
         self._delete_student_state_for_problem()
         with self._logged_in_session():

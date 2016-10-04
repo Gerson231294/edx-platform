@@ -1849,7 +1849,8 @@ class TestXmoduleRuntimeEvent(TestSubmittingProblems):
             'points_earned': self.grade_dict['value'],
             'user_id': self.student_user.id,
             'course_id': unicode(self.course.id),
-            'usage_id': unicode(self.problem.location)
+            'usage_id': unicode(self.problem.location),
+            'only_if_higher': None,
         }
         send_mock.assert_called_with(**expected_signal_kwargs)
 
