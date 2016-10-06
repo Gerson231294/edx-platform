@@ -53,7 +53,7 @@
         DiscussionSpecHelper.makeCourseSettings = function() {
             return new DiscussionCourseSettings({
                 category_map: {
-                    children: ['Test Topic', 'Other Topic'],
+                    children: [['Test Topic', 'entry'], ['Other Topic', 'entry']],
                     entries: {
                         'Test Topic': {
                             is_cohorted: true,

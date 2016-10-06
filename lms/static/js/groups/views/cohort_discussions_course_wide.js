@@ -33,8 +33,10 @@
                             entries = courseWideDiscussions.entries,
                             children = courseWideDiscussions.children;
 
-                        return HtmlUtils.joinHtml.apply(this, _.map(children, function(name) {
-                            var entry = entries[name];
+                        return HtmlUtils.joinHtml.apply(this, _.map(children, function(child) {
+                            // child[0] is the category name, child[1] is the type (i.e. 'entry' or 'subcategory')
+                            var name = child[0],
+                                entry = entries[name];
                             return subCategoryTemplate({
                                 name: name,
                                 id: entry.id,

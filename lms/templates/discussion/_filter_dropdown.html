@@ -6,8 +6,8 @@ from openedx.core.djangolib.markup import HTML
 %>
 
 <%def name="render_dropdown(map)">
-    % for child in map["children"]:
-        % if child in map["entries"]:
+    % for child, c_type in map["children"]:
+        % if child in map["entries"] and c_type == 'entry':
             ${HTML(render_entry(map["entries"], child))}
         %else:
             ${HTML(render_category(map["subcategories"], child))}

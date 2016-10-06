@@ -1229,7 +1229,7 @@ class CourseCohortDiscussionTopicsTestCase(CohortViewsTestCase):
         start_date = response['inline_discussions']['subcategories']['Chapter']['start_date']
         expected_response = {
             "course_wide_discussions": {
-                'children': ['Topic B'],
+                'children': [['Topic B', 'entry']],
                 'entries': {
                     'Topic B': {
                         'sort_key': 'A',
@@ -1243,7 +1243,7 @@ class CourseCohortDiscussionTopicsTestCase(CohortViewsTestCase):
                 'subcategories': {
                     'Chapter': {
                         'subcategories': {},
-                        'children': ['Discussion'],
+                        'children': [['Discussion', 'entry']],
                         'entries': {
                             'Discussion': {
                                 'sort_key': None,
@@ -1256,7 +1256,7 @@ class CourseCohortDiscussionTopicsTestCase(CohortViewsTestCase):
                         'start_date': start_date
                     }
                 },
-                'children': ['Chapter']
+                'children': [['Chapter', 'subcategory']]
             }
         }
         self.assertEqual(response, expected_response)
