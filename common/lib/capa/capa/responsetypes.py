@@ -1709,8 +1709,9 @@ class NumericalResponse(LoncapaResponse):
     multi_device_support = True
 
     def __init__(self, *args, **kwargs):
-        self.correct_answer = []
-        self.answer_index = 0
+        self.correct_answer = ''
+        self.additional_answers = []
+        self.additional_answer_index = -1
         self.tolerance = default_tolerance
         self.range_tolerance = False
         self.answer_range = self.inclusion = None
@@ -1721,47 +1722,34 @@ class NumericalResponse(LoncapaResponse):
         context = self.context
         answer = xml.get('answer')
 
-        correct_answers = (
-            [answer] +
+        self.additional_answers = (
             [element.get('answer') for element in xml.findall('additional_answer')]
         )
 
-        for answer in correct_answers:
-            if answer.startswith(('[', '(')) and answer.endswith((']', ')')):  # range tolerance case
-                self.range_tolerance = True
-                self.inclusion = (
-                    True if answer.startswith('[') else False, True if answer.endswith(']') else False
+        if answer.startswith(('[', '(')) and answer.endswith((']', ')')):  # range tolerance case
+            self.range_tolerance = True
+            self.inclusion = (
+                True if answer.startswith('[') else False, True if answer.endswith(']') else False
+            )
+            try:
+                self.answer_range = [contextualize_text(x, context) for x in answer[1:-1].split(',')]
+                self.correct_answer = answer[0] + self.answer_range[0] + ', ' + self.answer_range[1] + answer[-1]
+            except Exception:
+                log.debug("Content error--answer '%s' is not a valid range tolerance answer", answer)
+                _ = self.capa_system.i18n.ugettext
+                raise StudentInputError(
+                    _("There was a problem with the staff answer to this problem.")
                 )
-                try:
-                    self.answer_range = [contextualize_text(x, context) for x in answer[1:-1].split(',')]
-                    self.correct_answer.append(
-                        answer[0] + self.answer_range[0] + ', ' + self.answer_range[1] + answer[-1]
-                    )
-                except Exception:
-                    log.debug("Content error--answer '%s' is not a valid range tolerance answer", answer)
-                    _ = self.capa_system.i18n.ugettext
-                    raise StudentInputError(
-                        _("There was a problem with the staff answer to this problem.")
-                    )
-            else:
-                self.correct_answer.append(contextualize_text(answer, context))
+        else:
+            self.correct_answer = contextualize_text(answer, context)
 
-                # Find the tolerance
-                tolerance_xml = xml.xpath(
-                    '//*[@id=$id]//responseparam[@type="tolerance"]/@default',
-                    id=xml.get('id')
-                )
-                if tolerance_xml:  # If it isn't an empty list...
-                    self.tolerance = contextualize_text(tolerance_xml[0], context)
-
-    def get_staff_answers(self, answers):
-        """
-        Gets all staff answers.
-        """
-        correct_ans = []
-        for answer in answers:
-            correct_ans.append(self.get_staff_ans(answer))
-        return correct_ans
+            # Find the tolerance
+            tolerance_xml = xml.xpath(
+                '//*[@id=$id]//responseparam[@type="tolerance"]/@default',
+                id=xml.get('id')
+            )
+            if tolerance_xml:  # If it isn't an empty list...
+                self.tolerance = contextualize_text(tolerance_xml[0], context)
 
     def get_staff_ans(self, answer):
         """
@@ -1791,7 +1779,6 @@ class NumericalResponse(LoncapaResponse):
         """
         Grade a numeric response.
         """
-        self.answer_index = 0
         if self.answer_id not in student_answers:
             return CorrectMap(self.answer_id, 'incorrect')
 
@@ -1906,68 +1893,63 @@ class NumericalResponse(LoncapaResponse):
                         extended_boundaries.append(boundaries[1] + partial_range * boundary_range)
                         if extended_boundaries[0] < student_float < extended_boundaries[1]:
                             is_correct = 'partially-correct'
-
-            if is_correct == 'incorrect':
-                # Additional answers under ranged case.
-                correct_additional_ans = [
-                    ans for ans in self.correct_answer if not (ans.startswith(('[', '(')) and ans.endswith((']', ')')))
-                ]
-                for additional_ans in correct_additional_ans:
-                    answer = self.get_staff_ans(additional_ans)
-                    if compare_with_tolerance(
-                            student_float,
-                            answer,
-                            tolerance=float_info.epsilon,
-                            relative_tolerance=True
-                    ):
-                        is_correct = 'correct'
-                    self.answer_index += 1
         else:
-            correct_floats = self.get_staff_answers(self.correct_answer)
-            for correct_float in correct_floats:
-                # Partial credit is available in three cases:
-                #  If the student answer is within expanded tolerance of the actual answer,
-                #  the student gets 50% credit. (Currently set as the default.)
-                #  Set via partial_credit="close" in the numericalresponse tag.
-                #
-                #  If the student answer is within regular tolerance of an alternative answer,
-                #  the student gets 50% credit. (Same default.)
-                #  Set via partial_credit="list"
-                #
-                #  If the student answer is within expanded tolerance of an alternative answer,
-                #  the student gets 25%. (We take the 50% and square it, at the moment.)
-                #  Set via partial_credit="list,close" or "close, list" or the like.
-                if str(self.tolerance).endswith('%'):
-                    expanded_tolerance = str(partial_range * float(str(self.tolerance)[:-1])) + '%'
-                else:
-                    expanded_tolerance = partial_range * float(self.tolerance)
+            correct_float = self.get_staff_ans(self.correct_answer)
+            # for correct_float in correct_floats:
+            # Partial credit is available in three cases:
+            #  If the student answer is within expanded tolerance of the actual answer,
+            #  the student gets 50% credit. (Currently set as the default.)
+            #  Set via partial_credit="close" in the numericalresponse tag.
+            #
+            #  If the student answer is within regular tolerance of an alternative answer,
+            #  the student gets 50% credit. (Same default.)
+            #  Set via partial_credit="list"
+            #
+            #  If the student answer is within expanded tolerance of an alternative answer,
+            #  the student gets 25%. (We take the 50% and square it, at the moment.)
+            #  Set via partial_credit="list,close" or "close, list" or the like.
 
-                if compare_with_tolerance(student_float, correct_float, self.tolerance):
-                    is_correct = 'correct'
-                elif self.has_partial_credit is False:
-                    pass
-                elif 'list' in self.credit_type:
-                    for value in partial_answers:
-                        if compare_with_tolerance(student_float, value, self.tolerance):
+            if str(self.tolerance).endswith('%'):
+                expanded_tolerance = str(partial_range * float(str(self.tolerance)[:-1])) + '%'
+            else:
+                expanded_tolerance = partial_range * float(self.tolerance)
+
+            if compare_with_tolerance(student_float, correct_float, self.tolerance):
+                is_correct = 'correct'
+            elif self.has_partial_credit is False:
+                pass
+            elif 'list' in self.credit_type:
+                for value in partial_answers:
+                    if compare_with_tolerance(student_float, value, self.tolerance):
+                        is_correct = 'partially-correct'
+                        break
+                    elif 'close' in self.credit_type:
+                        if compare_with_tolerance(student_float, correct_float, expanded_tolerance):
                             is_correct = 'partially-correct'
                             break
-                        elif 'close' in self.credit_type:
-                            if compare_with_tolerance(student_float, correct_float, expanded_tolerance):
-                                is_correct = 'partially-correct'
-                                break
-                            elif compare_with_tolerance(student_float, value, expanded_tolerance):
-                                is_correct = 'partially-correct'
-                                partial_score = partial_score * partial_score
-                                break
-                elif 'close' in self.credit_type:
-                    if compare_with_tolerance(student_float, correct_float, expanded_tolerance):
-                        is_correct = 'partially-correct'
+                        elif compare_with_tolerance(student_float, value, expanded_tolerance):
+                            is_correct = 'partially-correct'
+                            partial_score = partial_score * partial_score
+                            break
+            elif 'close' in self.credit_type:
+                if compare_with_tolerance(student_float, correct_float, expanded_tolerance):
+                    is_correct = 'partially-correct'
 
-                # save time processing other iterations.
-                if is_correct in ['correct', 'partially-correct']:
+        # Compare with additional answers.
+        if is_correct == 'incorrect':
+            additional_answer_idx = 0
+            for additional_answer in self.additional_answers:
+                answer = self.get_staff_ans(additional_answer)
+                if compare_with_tolerance(
+                        student_float,
+                        answer,
+                        tolerance=float_info.epsilon,
+                        relative_tolerance=True
+                ):
+                    is_correct = 'correct'
+                    self.additional_answer_index = additional_answer_idx
                     break
-
-                self.answer_index += 1
+                additional_answer_idx += 1
 
         if is_correct == 'partially-correct':
             return CorrectMap(self.answer_id, is_correct, npoints=partial_score)
@@ -2000,7 +1982,7 @@ class NumericalResponse(LoncapaResponse):
         # Translators: Separator used in NumericalResponse to display multiple answers.
         # Example: "Answer: Answer_1 or Answer_2 or Answer_3".
         separator = u' <b>{}</b> '.format(_('or'))
-        return {self.answer_id: separator.join(self.correct_answer)}
+        return {self.answer_id: separator.join([self.correct_answer] + self.additional_answers)}
 
     def get_extended_hints(self, student_answers, new_cmap):
         """
@@ -2009,8 +1991,8 @@ class NumericalResponse(LoncapaResponse):
         """
         if self.answer_id in student_answers:
             if new_cmap.cmap[self.answer_id]['correctness'] == 'correct':  # if the grader liked the student's answer
-                # student answer is the base correct answer.
-                if not self.answer_index:
+                # Answer is not additional answer.
+                if self.additional_answer_index == -1:
                     # Note: using self.id here, not the more typical self.answer_id
                     hints = self.xml.xpath('//numericalresponse[@id=$id]/correcthint', id=self.id)
                     if hints:
@@ -2025,7 +2007,7 @@ class NumericalResponse(LoncapaResponse):
                 else:
                     # look for additional answer with an answer= attribute
                     additional_ans_hints = self.xml.xpath('//numericalresponse[@id=$id]/additional_answer', id=self.id)
-                    hint_node = additional_ans_hints[self.answer_index-1].find('./correcthint')
+                    hint_node = additional_ans_hints[self.additional_answer_index].find('./correcthint')
                     new_cmap[self.answer_id]['msg'] += self.make_hint_div(
                         hint_node,
                         True,
