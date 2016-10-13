@@ -1893,9 +1893,10 @@ class NumericalResponse(LoncapaResponse):
                         extended_boundaries.append(boundaries[1] + partial_range * boundary_range)
                         if extended_boundaries[0] < student_float < extended_boundaries[1]:
                             is_correct = 'partially-correct'
+
         else:
             correct_float = self.get_staff_ans(self.correct_answer)
-            # for correct_float in correct_floats:
+
             # Partial credit is available in three cases:
             #  If the student answer is within expanded tolerance of the actual answer,
             #  the student gets 50% credit. (Currently set as the default.)
@@ -1991,7 +1992,7 @@ class NumericalResponse(LoncapaResponse):
         """
         if self.answer_id in student_answers:
             if new_cmap.cmap[self.answer_id]['correctness'] == 'correct':  # if the grader liked the student's answer
-                # Answer is not additional answer.
+                # Answer is not an additional answer.
                 if self.additional_answer_index == -1:
                     # Note: using self.id here, not the more typical self.answer_id
                     hints = self.xml.xpath('//numericalresponse[@id=$id]/correcthint', id=self.id)
@@ -2003,7 +2004,7 @@ class NumericalResponse(LoncapaResponse):
                             [student_answers[self.answer_id]],
                             self.tags[0]
                         )
-                # student answer is among the additional answers.
+                # Student answer is among the additional answers.
                 else:
                     # look for additional answer with an answer= attribute
                     additional_ans_hints = self.xml.xpath('//numericalresponse[@id=$id]/additional_answer', id=self.id)
