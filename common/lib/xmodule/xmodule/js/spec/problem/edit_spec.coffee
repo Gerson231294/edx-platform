@@ -191,14 +191,101 @@ describe 'MarkdownEditingDescriptor', ->
       data =  MarkdownEditingDescriptor.markdownToXml("""
         Enter 1 with a tolerance:
         = 1 +- .02
-        or= 2 +- 5%
+        or= 2
         """)
       expect(data).toXMLEqual("""<problem>
         <numericalresponse answer="1">
           <p>Enter 1 with a tolerance:</p>
         <responseparam type="tolerance" default=".02"/>
-        <additional_answer answer="2 +- 5%"/>
+        <additional_answer answer="2"/>
           <formulaequationinput/>
+        </numericalresponse>
+
+
+        </problem>""")
+    it 'markup with multiple additional answers doesn\'t break numerical response', ->
+      data =  MarkdownEditingDescriptor.markdownToXml("""
+        Enter 1 with a tolerance:
+        = 1 +- .02
+        or= 2
+        or= 3
+        """)
+      expect(data).toXMLEqual("""<problem>
+        <numericalresponse answer="1">
+          <p>Enter 1 with a tolerance:</p>
+        <responseparam type="tolerance" default=".02"/>
+        <additional_answer answer="2"/>
+        <additional_answer answer="3"/>
+          <formulaequationinput/>
+        </numericalresponse>
+
+
+        </problem>""")
+    it 'markup with ranged additional answers doesn\'t break numerical response', ->
+      data =  MarkdownEditingDescriptor.markdownToXml("""
+        Enter 1 with a tolerance:
+        = 1 +- .02
+        or= [5,7]
+        """)
+      expect(data).toXMLEqual("""<problem>
+        <numericalresponse answer="1">
+          <p>Enter 1 with a tolerance:</p>
+        <responseparam type="tolerance" default=".02"/>
+          <formulaequationinput/>
+        </numericalresponse>
+
+
+        </problem>""")
+    it 'markup with ranged additional answer in multi additional answers doesn\'t break numerical response', ->
+      data =  MarkdownEditingDescriptor.markdownToXml("""
+        Enter 1 with a tolerance:
+        = 1 +- .02
+        or= 1
+        or= [5,7]
+        or= 2
+        """)
+      expect(data).toXMLEqual("""<problem>
+        <numericalresponse answer="1">
+          <p>Enter 1 with a tolerance:</p>
+        <responseparam type="tolerance" default=".02"/>
+        <additional_answer answer="1"/>
+        <additional_answer answer="2"/>
+          <formulaequationinput/>
+        </numericalresponse>
+
+
+        </problem>""")
+    it 'markup with tolerance additional answers doesn\'t break numerical response', ->
+      data =  MarkdownEditingDescriptor.markdownToXml("""
+        Enter 1 with a tolerance:
+        = 100 +- .02
+        or= 10 +- .01
+        """)
+      expect(data).toXMLEqual("""<problem>
+        <numericalresponse answer="100">
+          <p>Enter 1 with a tolerance:</p>
+        <responseparam type="tolerance" default=".02"/>
+        <additional_answer answer="10"/>
+          <formulaequationinput/>
+        </numericalresponse>
+
+
+        </problem>""")
+    it 'markup with feedback in additional answer doesn\'t break numerical response', ->
+      data =  MarkdownEditingDescriptor.markdownToXml("""
+        Enter 1 with a tolerance:
+        = 100 +- .02 {{ main feedback }}
+        or= 10 {{ additional feedback }}
+        """)
+      expect(data).toXMLEqual("""<problem>
+        <numericalresponse answer="100">
+          <p>Enter 1 with a tolerance:</p>
+        <responseparam type="tolerance" default=".02"/>
+        <additional_answer answer="10">
+          <correcthint>additional feedback</correcthint>
+        </additional_answer>
+          <formulaequationinput/>
+        <correcthint>main feedback</correcthint>
         </numericalresponse>
 
 
