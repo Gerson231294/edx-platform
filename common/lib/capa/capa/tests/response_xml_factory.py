@@ -221,7 +221,8 @@ class NumericalResponseXMLFactory(ResponseXMLFactory):
         """
 
         answer = kwargs.get('answer', None)
-        additional_answers = kwargs.get('additional_answers', [])
+        correcthint = kwargs.get('correcthint', '')
+        additional_answers = kwargs.get('additional_answers', None)
         tolerance = kwargs.get('tolerance', None)
         credit_type = kwargs.get('credit_type', None)
         partial_range = kwargs.get('partial_range', None)
@@ -235,9 +236,13 @@ class NumericalResponseXMLFactory(ResponseXMLFactory):
             else:
                 response_element.set('answer', str(answer))
 
-        for additional_answer in additional_answers:
-            additional_element = etree.SubElement(response_element, "additional_answer")
-            additional_element.set("answer", str(additional_answer))
+        if additional_answers:
+            for additional_answer, additional_correcthint in additional_answers.items():
+                additional_element = etree.SubElement(response_element, "additional_answer")
+                additional_element.set("answer", str(additional_answer))
+                if additional_correcthint:
+                    correcthint_element = etree.SubElement(additional_element, "correcthint")
+                    correcthint_element.text = str(additional_correcthint)
 
         if tolerance:
             responseparam_element = etree.SubElement(response_element, 'responseparam')
@@ -250,6 +255,10 @@ class NumericalResponseXMLFactory(ResponseXMLFactory):
             # The line below throws a false positive pylint violation, so it's excepted.
             responseparam_element = etree.SubElement(response_element, 'responseparam')
             responseparam_element.set('partial_answers', partial_answers)
+
+        if correcthint:
+            correcthint_element = etree.SubElement(response_element, "correcthint")
+            correcthint_element.text = str(correcthint)
 
         return response_element
 

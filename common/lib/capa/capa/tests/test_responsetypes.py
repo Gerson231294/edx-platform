@@ -1390,16 +1390,44 @@ class NumericalResponseTest(ResponseTest):  # pylint: disable=missing-docstring
     # For simple things its not worth the effort.
     def test_grade_range_tolerance(self):
         problem_setup = [
-            # [given_asnwer, [list of correct responses], [list of incorrect responses]]
+            # [given_answer, [list of correct responses], [list of incorrect responses]]
             ['[5, 7)', ['5', '6', '6.999'], ['4.999', '7']],
             ['[1.6e-5, 1.9e24)', ['0.000016', '1.6*10^-5', '1.59e24'], ['1.59e-5', '1.9e24', '1.9*10^24']],
             ['[0, 1.6e-5]', ['1.6*10^-5'], ["2"]],
             ['(1.6e-5, 10]', ["2"], ['1.6*10^-5']],
         ]
-        additional_answers = ['100', '1000']
         for given_answer, correct_responses, incorrect_responses in problem_setup:
-            problem = self.build_problem(answer=given_answer, additional_answers=additional_answers)
+            problem = self.build_problem(answer=given_answer)
             self.assert_multiple_grade(problem, correct_responses, incorrect_responses)
+
+    def test_additional_answer_grading(self):
+        """
+        Test additional answers are graded correct with their associated correcthint.
+        """
+        primary_answer = '100'
+        primary_correcthint = 'primary feedback'
+        additional_answers = {
+            '1': '1. additional feedback',
+            '2': '2. additional feedback',
+            '4': '4. additional feedback',
+            '5': ''
+        }
+        problem = self.build_problem(
+            answer=primary_answer,
+            additional_answers=additional_answers,
+            correcthint=primary_correcthint
+        )
+
+        # Assert primary answer is graded correct.
+        correct_map = problem.grade_answers({'1_2_1': primary_answer})
+        self.assertEqual(correct_map.get_correctness('1_2_1'), 'correct')
+        self.assertIn(primary_correcthint, correct_map.get_msg('1_2_1'))
+
+        # Assert additional answers are graded correct
+        for answer, correcthint in additional_answers.items():
+            correct_map = problem.grade_answers({'1_2_1': answer})
+            self.assertEqual(correct_map.get_correctness('1_2_1'), 'correct')
+            self.assertIn(correcthint, correct_map.get_msg('1_2_1'))
 
     def test_grade_range_tolerance_partial_credit(self):
         problem_setup = [
