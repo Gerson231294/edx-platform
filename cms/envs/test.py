@@ -87,7 +87,7 @@ STATICFILES_DIRS += [
     (course_dir, COMMON_TEST_DATA_ROOT / course_dir)
     for course_dir in os.listdir(COMMON_TEST_DATA_ROOT)
     if os.path.isdir(COMMON_TEST_DATA_ROOT / course_dir)
-]
+    ]
 
 # Avoid having to run collectstatic before the unit test suite
 # If we don't add these settings, then Django templates that can't
@@ -143,7 +143,6 @@ if os.environ.get('DISABLE_MIGRATIONS'):
 LMS_BASE = "localhost:8000"
 LMS_ROOT_URL = "http://{}".format(LMS_BASE)
 FEATURES['PREVIEW_LMS_BASE'] = "preview.localhost"
-
 
 CACHES = {
     # This is the cache used for most things. Askbot will not work without a
@@ -205,7 +204,6 @@ XQUEUE_PORT = 8040
 YOUTUBE_PORT = 8031
 LTI_PORT = 8765
 VIDEO_SOURCE_PORT = 8777
-
 
 ################### Make tests faster
 # http://slacy.com/blog/2012/04/make-your-tests-faster-in-django-1-4/
@@ -318,7 +316,6 @@ FEATURES['ENABLE_COURSEWARE_INDEX'] = True
 FEATURES['ENABLE_LIBRARY_INDEX'] = True
 SEARCH_ENGINE = "search.tests.mock_search_engine.MockSearchEngine"
 
-
 # teams feature
 FEATURES['ENABLE_TEAMS'] = True
 
@@ -335,3 +332,7 @@ INSTALLED_APPS += ('openedx.core.djangoapps.api_admin',)
 # Set the default Oauth2 Provider Model so that migrations can run in
 # verbose mode
 OAUTH2_PROVIDER_APPLICATION_MODEL = 'oauth2_provider.Application'
+
+# Used with Email sending
+RETRY_ACTIVATION_EMAIL_MAX_ATTEMPTS = 5
+RETRY_ACTIVATION_EMAIL_TIMEOUT = 0.5
