@@ -12,8 +12,9 @@ from opaque_keys.edx.locator import CourseLocator
 from openedx.core.djangoapps.content.block_structure.api import get_course_in_cache
 
 from .config.models import PersistentGradesEnabledFlag
-from .transformer import GradesTransformer
 from .new.subsection_grade import SubsectionGradeFactory
+from .signals.signals import COURSE_GRADE_UPDATE_REQUESTED
+from .transformer import GradesTransformer
 
 
 @task()
@@ -51,3 +52,8 @@ def recalculate_subsection_grade(user_id, course_id, usage_id):
         subsection_grade_factory.update(
             transformed_subsection_structure[subsection_usage_key], transformed_subsection_structure
         )
+    COURSE_GRADE_UPDATE_REQUESTED.send(
+        sender=None,
+        user_id=user_id,
+        course_id=course_id,
+    )
