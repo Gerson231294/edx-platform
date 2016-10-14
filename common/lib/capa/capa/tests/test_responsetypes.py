@@ -1418,7 +1418,7 @@ class NumericalResponseTest(ResponseTest):  # pylint: disable=missing-docstring
             correcthint=primary_correcthint
         )
 
-        # Assert primary answer is graded correct.
+        # Assert primary answer is graded correctly.
         correct_map = problem.grade_answers({'1_2_1': primary_answer})
         self.assertEqual(correct_map.get_correctness('1_2_1'), 'correct')
         self.assertIn(primary_correcthint, correct_map.get_msg('1_2_1'))
@@ -1428,6 +1428,25 @@ class NumericalResponseTest(ResponseTest):  # pylint: disable=missing-docstring
             correct_map = problem.grade_answers({'1_2_1': answer})
             self.assertEqual(correct_map.get_correctness('1_2_1'), 'correct')
             self.assertIn(correcthint, correct_map.get_msg('1_2_1'))
+
+    def test_additional_answer_get_score(self):
+        """
+        Test `get_score` is working for additional answers.
+        """
+        problem = self.build_problem(answer='100', additional_answers={'1': ''})
+        responder = problem.responders.values()[0]
+
+        # Check primary answer.
+        new_cmap = responder.get_score({'1_2_1': '100'})
+        self.assertEqual(new_cmap.get_correctness('1_2_1'), 'correct')
+
+        # Check additional answer.
+        new_cmap = responder.get_score({'1_2_1': '1'})
+        self.assertEqual(new_cmap.get_correctness('1_2_1'), 'correct')
+
+        # Check any wrong answer.
+        new_cmap = responder.get_score({'1_2_1': '2'})
+        self.assertEqual(new_cmap.get_correctness('1_2_1'), 'incorrect')
 
     def test_grade_range_tolerance_partial_credit(self):
         problem_setup = [

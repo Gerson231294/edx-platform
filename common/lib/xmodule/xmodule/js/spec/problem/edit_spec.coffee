@@ -187,7 +187,7 @@ describe 'MarkdownEditingDescriptor', ->
 
 
         </problem>""")
-    it 'markup with multiple answers doesn\'t break numerical response', ->
+    it 'markup with additional answer does not break numerical response', ->
       data =  MarkdownEditingDescriptor.markdownToXml("""
         Enter 1 with a tolerance:
         = 1 +- .02
@@ -203,7 +203,7 @@ describe 'MarkdownEditingDescriptor', ->
 
 
         </problem>""")
-    it 'markup with multiple additional answers doesn\'t break numerical response', ->
+    it 'markup for numerical with multiple additional answers renders correctly', ->
       data =  MarkdownEditingDescriptor.markdownToXml("""
         Enter 1 with a tolerance:
         = 1 +- .02
@@ -212,66 +212,36 @@ describe 'MarkdownEditingDescriptor', ->
         """)
       expect(data).toXMLEqual("""<problem>
         <numericalresponse answer="1">
-          <p>Enter 1 with a tolerance:</p>
+        <p>Enter 1 with a tolerance:</p>
         <responseparam type="tolerance" default=".02"/>
         <additional_answer answer="2"/>
         <additional_answer answer="3"/>
-          <formulaequationinput/>
+        <formulaequationinput/>
         </numericalresponse>
 
 
         </problem>""")
-    it 'markup with ranged additional answers doesn\'t break numerical response', ->
-      data =  MarkdownEditingDescriptor.markdownToXml("""
-        Enter 1 with a tolerance:
-        = 1 +- .02
-        or= [5,7]
-        """)
-      expect(data).toXMLEqual("""<problem>
-        <numericalresponse answer="1">
-          <p>Enter 1 with a tolerance:</p>
-        <responseparam type="tolerance" default=".02"/>
-          <formulaequationinput/>
-        </numericalresponse>
-
-
-        </problem>""")
-    it 'markup with ranged additional answer in multi additional answers doesn\'t break numerical response', ->
+    it 'Do not render ranged/ default tolerance additional answers for numerical response', ->
       data =  MarkdownEditingDescriptor.markdownToXml("""
         Enter 1 with a tolerance:
         = 1 +- .02
         or= 1
         or= [5,7]
-        or= 2
+        or= 2 +- .01
+        or= 3
         """)
       expect(data).toXMLEqual("""<problem>
         <numericalresponse answer="1">
-          <p>Enter 1 with a tolerance:</p>
+        <p>Enter 1 with a tolerance:</p>
         <responseparam type="tolerance" default=".02"/>
         <additional_answer answer="1"/>
-        <additional_answer answer="2"/>
-          <formulaequationinput/>
+        <additional_answer answer="3"/>
+        <formulaequationinput/>
         </numericalresponse>
 
 
         </problem>""")
-    it 'markup with tolerance additional answers doesn\'t break numerical response', ->
-      data =  MarkdownEditingDescriptor.markdownToXml("""
-        Enter 1 with a tolerance:
-        = 100 +- .02
-        or= 10 +- .01
-        """)
-      expect(data).toXMLEqual("""<problem>
-        <numericalresponse answer="100">
-          <p>Enter 1 with a tolerance:</p>
-        <responseparam type="tolerance" default=".02"/>
-        <additional_answer answer="10"/>
-          <formulaequationinput/>
-        </numericalresponse>
-
-
-        </problem>""")
-    it 'markup with feedback in additional answer doesn\'t break numerical response', ->
+    it 'markup with feedback renders correctly in additional answer for numerical response', ->
       data =  MarkdownEditingDescriptor.markdownToXml("""
         Enter 1 with a tolerance:
         = 100 +- .02 {{ main feedback }}
@@ -279,12 +249,12 @@ describe 'MarkdownEditingDescriptor', ->
         """)
       expect(data).toXMLEqual("""<problem>
         <numericalresponse answer="100">
-          <p>Enter 1 with a tolerance:</p>
+        <p>Enter 1 with a tolerance:</p>
         <responseparam type="tolerance" default=".02"/>
         <additional_answer answer="10">
           <correcthint>additional feedback</correcthint>
         </additional_answer>
-          <formulaequationinput/>
+        <formulaequationinput/>
         <correcthint>main feedback</correcthint>
         </numericalresponse>
 
