@@ -6,6 +6,7 @@ from django.conf import settings
 from django.core.cache import cache
 from edx_rest_api_client.client import EdxRestApiClient
 from opaque_keys.edx.keys import CourseKey
+from openedx.core.djangoapps.api_admin.utils import course_discovery_api_client
 
 from openedx.core.djangoapps.catalog.models import CatalogIntegration
 from openedx.core.lib.edx_api_utils import get_edx_api_data
@@ -13,6 +14,7 @@ from openedx.core.lib.token_utils import JwtBuilder
 
 
 log = logging.getLogger(__name__)
+
 def create_catalog_api_client(user, catalog_integration):
     """Returns an API client which can be used to make catalog API requests."""
     scopes = ['email', 'profile']
@@ -128,15 +130,24 @@ def get_course_runs(user, course_keys=[]):
         dict, empty if no data could be retrieved.
     """
     try:
-        course_catalog_data = cache.get_many(course_keys)
-        if len(course_catalog_data.keys()) != len(course_keys):
-            found_keys = course_catalog_data.keys()
-            missed_keys = list(set(course_keys) - set(found_keys))
-            log.debug("Catalog data not found in cache against Course Keys: '{}'".format(",".join(missed_keys)))
+        course_catalog_data_dict = cache.get_many(course_keys)
+        print "\n cached data \n"
+        print course_catalog_data_dict
+        print "\n asked keys \n"
+        print course_keys
+        if len(course_catalog_data_dict.keys()) != len(course_keys):
+            found_keys = course_catalog_data_dict.keys()
+            for key in course_keys:
+                if key in found_keys:
+                    course_keys.remove(key)
+            print "\n missed keys \n"
+            print course_keys
+            log.debug("Catalog data not found in cache against Course Keys: '{}'".format(",".join(course_keys)))
 
             catalog_integration = CatalogIntegration.current()
             if catalog_integration.enabled:
-                api = create_catalog_api_client(user, catalog_integration)
+                #api = create_catalog_api_client(user, catalog_integration)
+                api = course_discovery_api_client(user)
 
                 catalog_data = get_edx_api_data(
                     catalog_integration,
@@ -145,11 +156,13 @@ def get_course_runs(user, course_keys=[]):
                     api=api,
                     querystring={'keys': ",".join(missed_keys), 'exclude_utm': 1},
                 )
+                print "\n catalog_data \n"
+                print catalog_data
                 if catalog_data:
                     log.debug("no. of results: {}".format(catalog_data["count"]))
-                    for data in catalog_data["results"]:
-                        log.debug("course_key: {}, marketing_url: {}".format(data["key"], data["marketing_url"]))
-                        course_catalog_data[data["key"]] = data
+                    for course_data in catalog_data:
+                        cache.set(course_data["key"], course_data, None)
+                        course_catalog_data_dict[course_data["key"]] = course_data
         # data = get_edx_api_data(
         #     catalog_integration,
         #     user,
@@ -160,8 +173,7 @@ def get_course_runs(user, course_keys=[]):
         #     querystring={'exclude_utm': 1},
         # )
 
-
-        return course_catalog_data
+        return course_catalog_data_dict
     except Exception as e:
         log.debug("error occured: {}".format(e.message))
 
@@ -228,11 +240,11 @@ def get_run_marketing_urls(user, course_keys=[]):
         if course_key in course_catalog_dict:
             marketing_url = course_catalog_dict[course_key].get('marketing_url')
 
-            if marketing_url:
+            #if marketing_url:
                 # This URL may include unwanted UTM parameters in the querystring.
                 # For more, see https://en.wikipedia.org/wiki/UTM_parameters.
                 #return strip_querystring(marketing_url)
-                course_marketing_url_dict[course_key] = strip_querystring(marketing_url)
+            course_marketing_url_dict[course_key] = strip_querystring(marketing_url) if marketing_url else None
 
     return course_marketing_url_dict
 

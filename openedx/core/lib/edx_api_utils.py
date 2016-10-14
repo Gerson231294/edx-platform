@@ -37,7 +37,6 @@ def get_edx_api_data(api_config, user, resource,
         returned by DRF-powered APIs.
     """
     no_data = []
-
     if not api_config.enabled:
         log.warning('%s configuration is disabled.', api_config.API_NAME)
         return no_data

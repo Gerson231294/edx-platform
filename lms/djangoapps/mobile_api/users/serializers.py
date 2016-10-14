@@ -1,6 +1,7 @@
 """
 Serializer for user API
 """
+from django.conf import settings
 from opaque_keys.edx.keys import CourseKey
 from rest_framework import serializers
 from rest_framework.reverse import reverse
@@ -56,7 +57,7 @@ class CourseOverviewField(serializers.RelatedField):
             },
             'course_image': course_overview.course_image_url,
             'course_about': get_link_for_about_page(
-                CourseKey.from_string(course_id), request.user, request_cache_dict.get('course_marketing_url_dict')
+                course_id, request.user, request_cache_dict.get('course_marketing_url_dict')
             ),
             'course_updates': reverse(
                 'course-updates-list',
@@ -91,10 +92,13 @@ class CourseEnrollmentSerializer(serializers.ModelSerializer):
 
     @classmethod
     def set_course_catalog(cls, user, course_ids):
+        """
+        Gets catalog data for all courses that need serialization in single API call and caches a dict of
+        course marketing URL against course key.
+        """
         request_cache_dict = request_cache.get_cache('course_enrollment')
-        if not request_cache_dict.get('course_marketing_url_dict'):
+        if settings.FEATURES.get('ENABLE_MKTG_SITE') and not request_cache_dict.get('course_marketing_url_dict'):
             request_cache_dict['course_marketing_url_dict'] = get_run_marketing_urls(user, course_ids)
-
 
     def get_certificate(self, model):
         """Returns the information about the user's certificate in the course."""
