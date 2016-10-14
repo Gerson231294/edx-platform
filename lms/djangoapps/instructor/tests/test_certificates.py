@@ -361,14 +361,13 @@ class CertificatesInstructorApiTest(SharedModuleStoreTestCase):
     @ddt.unpack
     def test_verified_users_with_audit_certs(self, expected_cert_status, verification_output, id_verification_status):
         """
-        Test that `verified_users_with_audit_certs` option regenerates certificate for verified users with audit
-        certificates.
+        Test certificate regeneration for verified users with audit certificates.
 
         Scenario:
-            User enrolled in course as audit,
-            User passed the course as audit so they have `audit_passing` certificate status,
+            Enroll user in a course in audit mode,
+            User passed the course and now he has `audit_passing` certificate status,
             User switched to verified mode and is ID verified,
-            Regenerate certificates for `verified_users_with_audit_certs` is run,
+            Regenerate certificate for it,
             Modified certificate status is `generating` if user is ID verified otherwise `unverified`.
         """
         # Check that user is enrolled in audit mode.
@@ -399,7 +398,7 @@ class CertificatesInstructorApiTest(SharedModuleStoreTestCase):
             )
             self.assertEquals(actual_verification_status, verification_output)
 
-            # Login the client and access the url with 'verified_users_with_audit_certs'
+            # Login the client and access the url with 'audit_passing' status.
             self.client.login(username=self.global_staff.username, password='test')
             url = reverse(
                 'start_certificate_regeneration',
