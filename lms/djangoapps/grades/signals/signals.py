@@ -19,3 +19,11 @@ SCORE_CHANGED = Signal(
         'usage_id'  # Unicode string indicating the courseware instance
     ]
 )
+
+# Signal that indicates a course grade needs to be updated
+COURSE_GRADE_UPDATE_REQUESTED = Signal(
+    providing_args=[
+        'user_id',  # Integer User ID
+        'course_id',  # Unicode string representing the course
+    ]
+)
