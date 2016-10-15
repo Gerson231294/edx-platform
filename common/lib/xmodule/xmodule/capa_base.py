@@ -30,7 +30,6 @@ from xmodule.capa_base_constants import RANDOMIZATION, SHOWANSWER
 from django.conf import settings
 
 from openedx.core.djangolib.markup import HTML, Text
-from openedx.core.lib.grade_utils import compare_scores
 
 log = logging.getLogger("edx.courseware")
 
@@ -1429,26 +1428,13 @@ class CapaMixin(CapaFields):
                 return {'success': msg}
             raise
 
-        new_score = self.lcp.get_score()
-
-        if only_if_higher:
-            is_higher, orig_percentage, new_percentage = compare_scores(
-                orig_score['score'], orig_score['total'], new_score['score'], new_score['total'],
-            )
-            if not is_higher:
-                return {
-                    'success': u"New score {} is not higher than original score {}.".format(
-                        new_percentage,
-                        orig_percentage,
-                    )
-                }
-
         # rescoring should have no effect on attempts, so don't
         # need to increment here, or mark done.  Just save.
         self.set_state_from_lcp()
 
         self.publish_grade(only_if_higher)
 
+        new_score = self.lcp.get_score()
         event_info['new_score'] = new_score['score']
         event_info['new_total'] = new_score['total']
 

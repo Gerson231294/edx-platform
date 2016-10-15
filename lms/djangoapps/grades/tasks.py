@@ -7,10 +7,10 @@ from django.conf import settings
 from django.contrib.auth.models import User
 
 from lms.djangoapps.course_blocks.api import get_course_blocks
-from lms.djangoapps.courseware.courses import get_course_by_id
 from opaque_keys.edx.keys import UsageKey
 from opaque_keys.edx.locator import CourseLocator
 from openedx.core.djangoapps.content.block_structure.api import get_course_in_cache
+from xmodule.modulestore.django import modulestore
 
 from .config.models import PersistentGradesEnabledFlag
 from .transformer import GradesTransformer
@@ -37,7 +37,7 @@ def recalculate_subsection_grade(user_id, course_id, usage_id, only_if_higher):
     scored_block_usage_key = UsageKey.from_string(usage_id).replace(course_key=course_key)
 
     collected_block_structure = get_course_in_cache(course_key)
-    course = get_course_by_id(course_key, depth=0)
+    course = modulestore().get_course(course_key, depth=0)
     subsection_grade_factory = SubsectionGradeFactory(student, course, collected_block_structure)
     subsections_to_update = collected_block_structure.get_transformer_block_field(
         scored_block_usage_key,
