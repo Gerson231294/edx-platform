@@ -4,11 +4,14 @@
   %if section_data['is_small_course']:
   ## Show the gradebook for small courses
     <h3 class="hd hd-3">${_("Student Gradebook")}</h3>
-      <label for="gradebook-link">
-    	${_("Click here to view the gradebook for enrolled students. This feature is only visible to courses with a small number of total enrolled students.")}
-      </label>
-      <br>
-    <span name="gradebook-link"></span><a href="${ section_data['spoc_gradebook_url'] }" class="gradebook-link"> ${_("View Gradebook")} </a></span>
+
+    <label for="gradebook-link">
+      ${_("Click this link to view the gradebook for enrolled students:")}
+    </label>
+    <span name="gradebook-link"><a href="${ section_data['spoc_gradebook_url'] }" class="gradebook-link"> ${_("Gradebook")} </a></span>
+  </br>
+  </br>
+    <label>${_("Note: This feature is only visible to courses with a small number of total enrolled students.")}</label>
     <hr>
   %endif
 </div>
@@ -27,7 +30,7 @@
   <label for="progress-link">
     ${_("Click this link to view the student's progress page:")}
   </label>
-    <span name="progress-link"></span><a href="" class="progress-link" data-endpoint="${ section_data['get_student_progress_url_url'] }"> ${_("Student Progress Page")} </a></span>
+    <span name="progress-link"><a href="" class="progress-link" data-endpoint="${ section_data['get_student_progress_url_url'] }"> ${_("Student Progress Page")} </a></span>
   </div>
 
   <hr>
@@ -44,21 +47,17 @@
   <br>
   </br>
 
-  <label for="problem-select-single"> ${_("Specify a problem in the course here with its complete location:")}
-      </br>
-  <input type="text" name="problem-select-single" placeholder="${_("Problem location")}">
+  <label for="problem-select-single">
+    ${_("Specify the location of a problem in the course. For example:")}
+    </br>
+    <code name="problem-location-example-1">block-v1:edX+DemoX+2015+type@problem+block@618c5933b8b544e4a4cc103d3e508378</code>
+    </br>
+    <input type="text" name="problem-select-single" placeholder="${_("Problem location")}">
   </label>
     </br>
     </br>
-
-  ## Translators: A location (string of text) follows this sentence.
-  <label for="problem-location-example-1">${_("You must provide the complete location of the problem. In the Staff Debug viewer, the location looks like this:")}</label></br>
-  <code name="problem-location-example-1">block-v1:edX+DemoX+2015+type@problem+block@618c5933b8b544e4a4cc103d3e508378</code>
-
-    </br>
-    </br>
   <label for="single-user-actions">
-  ${_("Next, select an action to perform for the given user and problem:")}
+    ${_("Select an action to perform for the specified student and problem")}:
   </label>
 
     </br>
@@ -74,7 +73,7 @@
     </br>
     </br>
   %if section_data['access']['instructor']:
-    <label for="delete-state-single"> ${_('You may also delete the entire state of a student for the specified problem:')}
+    <label for="delete-state-single"> ${_("You can also delete a student's state for the specified problem:")}
     </br>
     <input type="button" class="molly-guard" name="delete-state-single" value="${_("Delete Student State for Problem")}" data-endpoint="${ section_data['reset_student_attempts_url'] }">
     </label>
@@ -152,21 +151,16 @@
     <div class="request-response-error"></div>
 
     <label for="problem-select-all">
-      ${_("Specify a problem in the course here with its complete location:")}
+      ${_("Specify the location of a problem in the course. For example:")}
+      </br>
+      <code name="problem-location-example-1">block-v1:edX+DemoX+2015+type@problem+block@618c5933b8b544e4a4cc103d3e508378</code>
+      </br>
+      <input type="text" name="problem-select-all" placeholder="${_("Problem location")}" aria-describedby="problem-select-all-help">
     </label>
-      </br>
-  <input type="text" name="problem-select-all" placeholder="${_("Problem location")}" aria-describedby="problem-select-all-help">
 
       </br>
       </br>
-    ## Translators: A location (string of text) follows this sentence.
-    <label for="problem-location-example-2">${_("You must provide the complete location of the problem. In the Staff Debug viewer, the location looks like this:")}</label>
-      <br/>
-    <code name="problem-location-example-2">block-v1:edX+DemoX+2015+type@problem+block@618c5933b8b544e4a4cc103d3e508378</code>
-
-      </br>
-      </br>
-    <label for="course-specific-grade-actions">${_("Then select an action")}:</label>
+    <label for="course-specific-grade-actions">${_("Select an action")}:</label>
       </br>
     <span name="course-specific-grade-actions">
         <input type="button" class="molly-guard" name="reset-attempts-all" value="${_("Reset ALL students' attempts")}" data-endpoint="${ section_data['reset_student_attempts_url'] }">
