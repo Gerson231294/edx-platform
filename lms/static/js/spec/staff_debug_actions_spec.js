@@ -29,9 +29,9 @@ define([
                 });
             });
 
-            describe('sanitizedString', function() {
+            describe('sanitizeString', function() {
                 it('escapes escapable characters in a string', function() {
-                    expect(StaffDebug.sanitizedString('.*+?^:${}()|]['))
+                    expect(StaffDebug.sanitizeString('.*+?^:${}()|]['))
                       .toBe('\\.\\*\\+\\?\\^\\:\\$\\{\\}\\(\\)\\|\\]\\[');
                 });
             });

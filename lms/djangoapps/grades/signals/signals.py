@@ -12,10 +12,12 @@ from django.dispatch import Signal
 # receives the same score).
 SCORE_CHANGED = Signal(
     providing_args=[
-        'user',  # User
+        'user_id',  # Integer User ID
         'course_id',  # Unicode string representing the course
         'usage_id',  # Unicode string indicating the courseware instance
         'points_earned',   # Score obtained by the user
         'points_possible',  # Maximum score available for the exercise
+        'only_if_higher',   # Boolean indicating whether updates should be
+                            # made only if the new score is higher than previous.
     ]
 )

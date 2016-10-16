@@ -90,8 +90,8 @@ def score_published_handler(block, user, new_raw_earned, new_raw_possible, only_
     if only_if_higher:
         previous_score = get_score(user.id, block.location)
 
-        if previous_score is not None:
-            prev_raw_earned, prev_raw_possible = previous_score
+        if previous_score:
+            prev_raw_earned, prev_raw_possible = previous_score  # pylint: disable=unpacking-non-sequence
 
             if not is_score_higher(prev_raw_earned, prev_raw_possible, new_raw_earned, new_raw_possible):
                 update_score = False

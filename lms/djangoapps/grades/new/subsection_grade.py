@@ -265,38 +265,26 @@ class SubsectionGradeFactory(object):
             self.student, block_structure, self._submissions_scores, self._csm_scores,
         )
 
-        should_update_grade = True
         if only_if_higher:
-            calculated_grade, should_update_grade = self._choose_grade_to_update(
-                subsection, block_structure, calculated_grade,
-            )
+            try:
+                grade_model = PersistentSubsectionGrade.read_grade(self.student.id, subsection.location)
+            except PersistentSubsectionGrade.DoesNotExist:
+                pass
+            else:
+                orig_subsection_grade = SubsectionGrade(subsection, self.course).init_from_model(
+                    self.student, grade_model, block_structure, self._submissions_scores, self._csm_scores,
+                )
+                if not is_score_higher(
+                        orig_subsection_grade.graded_total.earned,
+                        orig_subsection_grade.graded_total.possible,
+                        calculated_grade.graded_total.earned,
+                        calculated_grade.graded_total.possible,
+                ):
+                    return orig_subsection_grade
 
-        if should_update_grade:
-            grade_model = calculated_grade.update_or_create_model(self.student)
-            self._update_saved_subsection_grade(subsection.location, grade_model)
-
+        grade_model = calculated_grade.update_or_create_model(self.student)
+        self._update_saved_subsection_grade(subsection.location, grade_model)
         return calculated_grade
-
-    def _choose_grade_to_update(self, subsection, block_structure, new_calculated_grade):
-        """
-        Returns a tuple of the chosen grade and whether it needs to be updated.
-        """
-        try:
-            grade_model = PersistentSubsectionGrade.read_grade(self.student.id, subsection.location)
-            orig_subsection_grade = SubsectionGrade(subsection, self.course).init_from_model(
-                self.student, grade_model, block_structure, self._submissions_scores, self._csm_scores,
-            )
-            if not is_score_higher(
-                    orig_subsection_grade.graded_total.earned,
-                    orig_subsection_grade.graded_total.possible,
-                    new_calculated_grade.graded_total.earned,
-                    new_calculated_grade.graded_total.possible,
-            ):
-                return orig_subsection_grade, False
-        except PersistentSubsectionGrade.DoesNotExist:
-            pass
-
-        return new_calculated_grade, True
 
     @lazy
     def _csm_scores(self):
@@ -318,29 +306,32 @@ class SubsectionGradeFactory(object):
 
     def _get_bulk_cached_grade(self, subsection, block_structure):  # pylint: disable=unused-argument
         """
-        Returns the saved grade for the student and subsection.
+        Returns the student's SubsectionGrade for the subsection,
+        while caching the results of a bulk retrieval for the
+        course, for future access of other subsections.
+        Returns None if not found.
         """
         if not PersistentGradesEnabledFlag.feature_enabled(self.course.id):
             return
 
-        saved_subsection_grade = self._get_bulk_cached_subsection_grades(subsection.location)
-        if saved_subsection_grade:
+        saved_subsection_grades = self._get_bulk_cached_subsection_grades()
+        subsection_grade = saved_subsection_grades.get(subsection.location)
+        if subsection_grade:
             return SubsectionGrade(subsection, self.course).init_from_model(
-                self.student, saved_subsection_grade, block_structure, self._submissions_scores, self._csm_scores,
+                self.student, subsection_grade, block_structure, self._submissions_scores, self._csm_scores,
             )
 
-    def _get_bulk_cached_subsection_grades(self, subsection_usage_key):
+    def _get_bulk_cached_subsection_grades(self):
         """
-        Returns the saved value of the subsection grade for
-        the given subsection usage key, caching the value.
-        Returns None if not found.
+        Returns and caches (for future access) the results of
+        a bulk retrieval of all subsection grades in the course.
         """
         if self._cached_subsection_grades is None:
             self._cached_subsection_grades = {
                 record.full_usage_key: record
                 for record in PersistentSubsectionGrade.bulk_read_grades(self.student.id, self.course.id)
             }
-        return self._cached_subsection_grades.get(subsection_usage_key)
+        return self._cached_subsection_grades
 
     def _update_saved_subsection_grade(self, subsection_usage_key, subsection_model):
         """

@@ -1,3 +1,6 @@
+"""
+Helpers for courseware tests.
+"""
 import crum
 import json
 

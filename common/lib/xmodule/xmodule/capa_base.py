@@ -1378,7 +1378,7 @@ class CapaMixin(CapaFields):
         This is called when the correct answer to a problem has been changed,
         and the grade should be re-evaluated.
 
-        If only_if_higher is True, the answer and grade is updated
+        If only_if_higher is True, the answer and grade are updated
         only if the resulting score is higher than before.
 
         Returns a dict with one key:

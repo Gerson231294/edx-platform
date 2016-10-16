@@ -6,12 +6,12 @@ var StaffDebug = (function() {
         return pathname.substr(0, pathname.indexOf('/courseware')) + '/instructor/api/' + action;
     };
 
-    var sanitizedString = function(string) {
+    var sanitizeString = function(string) {
         return string.replace(/[.*+?^:${}()|[\]\\]/g, '\\$&');
     };
 
     var getUser = function(locationName) {
-        var sanitizedLocationName = sanitizedString(locationName);
+        var sanitizedLocationName = sanitizeString(locationName);
         var uname = $('#sd_fu_' + sanitizedLocationName).val();
         if (uname === '') {
             uname = $('#sd_fu_' + sanitizedLocationName).attr('placeholder');
@@ -37,7 +37,7 @@ var StaffDebug = (function() {
                 var html = _.template('<p id="idash_msg" class="success">{text}</p>', {interpolate: /\{(.+?)\}/g})(
                 {text: text}
             );
-                $('#result_' + sanitizedString(action.locationName)).html(html);
+                $('#result_' + sanitizeString(action.locationName)).html(html);
             },
             error: function(request, status, error) {
                 var responseJSON;
@@ -55,7 +55,7 @@ var StaffDebug = (function() {
                 var html = _.template('<p id="idash_msg" class="error">{text}</p>', {interpolate: /\{(.+?)\}/g})(
                 {text: text}
             );
-                $('#result_' + sanitizedString(action.locationName)).html(html);
+                $('#result_' + sanitizeString(action.locationName)).html(html);
             },
             dataType: 'json'
         });
@@ -120,7 +120,7 @@ var StaffDebug = (function() {
         getCurrentUrl: getCurrentUrl,
         getURL: getURL,
         getUser: getUser,
-        sanitizedString: sanitizedString
+        sanitizeString: sanitizeString
     }; })();
 
 // Register click handlers
