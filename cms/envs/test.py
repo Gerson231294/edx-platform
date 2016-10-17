@@ -331,3 +331,5 @@ FEATURES['CUSTOM_COURSES_EDX'] = True
 
 # API access management -- needed for simple-history to run.
 INSTALLED_APPS += ('openedx.core.djangoapps.api_admin',)
+
+COURSE_CATALOG_API_URL = 'https://catalog.example.com/api/v1'

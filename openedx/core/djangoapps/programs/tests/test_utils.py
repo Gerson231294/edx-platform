@@ -22,6 +22,7 @@ from provider.constants import CONFIDENTIAL
 
 from lms.djangoapps.certificates.api import MODES
 from lms.djangoapps.commerce.tests.test_utils import update_commerce_config
+from openedx.core.djangoapps.catalog.tests.mixins import CatalogIntegrationMixin
 from openedx.core.djangoapps.content.course_overviews.models import CourseOverview
 from openedx.core.djangoapps.credentials.tests import factories as credentials_factories
 from openedx.core.djangoapps.credentials.tests.mixins import CredentialsApiConfigMixin, CredentialsDataMixin
@@ -699,10 +700,10 @@ class TestProgramProgressMeter(ProgramsApiConfigMixin, TestCase):
 
 
 @ddt.ddt
+@httpretty.activate
 @override_settings(ECOMMERCE_PUBLIC_URL_ROOT=ECOMMERCE_URL_ROOT)
 @skipUnless(settings.ROOT_URLCONF == 'lms.urls', 'Test only valid in lms')
-@mock.patch(UTILS_MODULE + '.get_run_marketing_url', mock.Mock(return_value=MARKETING_URL))
-class TestProgramDataExtender(ProgramsApiConfigMixin, ModuleStoreTestCase):
+class TestProgramDataExtender(ProgramsApiConfigMixin, ModuleStoreTestCase, CatalogIntegrationMixin):
     """Tests of the program data extender utility class."""
     maxDiff = None
     sku = 'abc123'
@@ -730,6 +731,11 @@ class TestProgramDataExtender(ProgramsApiConfigMixin, ModuleStoreTestCase):
             course_codes=[self.course_code]
         )
 
+        #self.catalog_integration = self.create_catalog_integration()
+        # self.register_catalog_course_run_response(
+        #     unicode(self.course.id), [self.minimum_catalog_course_run_object(unicode(self.course.id))]
+        # )
+
     def _assert_supplemented(self, actual, **kwargs):
         """DRY helper used to verify that program data is extended correctly."""
         course_overview = CourseOverview.get_from_id(self.course.id)  # pylint: disable=no-member
@@ -744,7 +750,7 @@ class TestProgramDataExtender(ProgramsApiConfigMixin, ModuleStoreTestCase):
                 is_course_ended=self.course.end < timezone.now(),
                 is_enrolled=False,
                 is_enrollment_open=True,
-                marketing_url=MARKETING_URL,
+                marketing_url="https://marketing-url/course/course-title-{}".format(unicode(self.course.id)),  # pylint: disable=no-member
                 start_date=strftime_localized(self.course.start, 'SHORT_DATE'),
                 upgrade_url=None,
             ),
@@ -753,6 +759,9 @@ class TestProgramDataExtender(ProgramsApiConfigMixin, ModuleStoreTestCase):
         course_code = factories.CourseCode(display_name=self.course_code['display_name'], run_modes=[run_mode])
         expected = copy.deepcopy(self.program)
         expected['course_codes'] = [course_code]
+
+        print "\n actual \n"
+        print actual
 
         self.assertEqual(actual, expected)
 
@@ -780,13 +789,17 @@ class TestProgramDataExtender(ProgramsApiConfigMixin, ModuleStoreTestCase):
         if is_enrolled:
             CourseEnrollmentFactory(user=self.user, course_id=self.course.id, mode=enrolled_mode)  # pylint: disable=no-member
 
-        data = utils.ProgramDataExtender(self.program, self.user).extend()
+        course_id = unicode(self.course.id)  # pylint: disable=no-member
+        with mock.patch('openedx.core.djangoapps.catalog.utils.get_course_runs', return_value={
+            course_id: self.minimum_catalog_course_run_object(course_id),
+        }):
+            data = utils.ProgramDataExtender(self.program, self.user).extend()
 
-        self._assert_supplemented(
-            data,
-            is_enrolled=is_enrolled,
-            upgrade_url=expected_upgrade_url if is_upgrade_required else None
-        )
+            self._assert_supplemented(
+                data,
+                is_enrolled=is_enrolled,
+                upgrade_url=expected_upgrade_url if is_upgrade_required else None
+            )
 
     @ddt.data(MODES.audit, MODES.verified)
     def test_inactive_enrollment_no_upgrade(self, enrolled_mode):
@@ -800,9 +813,13 @@ class TestProgramDataExtender(ProgramsApiConfigMixin, ModuleStoreTestCase):
             is_active=False,
         )
 
-        data = utils.ProgramDataExtender(self.program, self.user).extend()
+        course_id = unicode(self.course.id)  # pylint: disable=no-member
+        with mock.patch('openedx.core.djangoapps.catalog.utils.get_course_runs', return_value={
+            course_id: self.minimum_catalog_course_run_object(course_id),
+        }):
+            data = utils.ProgramDataExtender(self.program, self.user).extend()
 
-        self._assert_supplemented(data)
+            self._assert_supplemented(data)
 
     @mock.patch(UTILS_MODULE + '.CourseMode.mode_for_course')
     def test_ecommerce_disabled(self, mock_get_mode):
@@ -815,9 +832,12 @@ class TestProgramDataExtender(ProgramsApiConfigMixin, ModuleStoreTestCase):
 
         CourseEnrollmentFactory(user=self.user, course_id=self.course.id, mode=MODES.audit)  # pylint: disable=no-member
 
-        data = utils.ProgramDataExtender(self.program, self.user).extend()
-
-        self._assert_supplemented(data, is_enrolled=True, upgrade_url=None)
+        course_id = unicode(self.course.id)  # pylint: disable=no-member
+        with mock.patch('openedx.core.djangoapps.catalog.utils.get_course_runs', return_value={
+            course_id: self.minimum_catalog_course_run_object(course_id),
+        }):
+            data = utils.ProgramDataExtender(self.program, self.user).extend()
+            self._assert_supplemented(data, is_enrolled=True, upgrade_url=None)
 
     @ddt.data(
         (1, 1, False),
@@ -830,13 +850,17 @@ class TestProgramDataExtender(ProgramsApiConfigMixin, ModuleStoreTestCase):
         self.course.enrollment_end = timezone.now() - datetime.timedelta(days=end_offset)
         self.course = self.update_course(self.course, self.user.id)  # pylint: disable=no-member
 
-        data = utils.ProgramDataExtender(self.program, self.user).extend()
+        course_id = unicode(self.course.id)  # pylint: disable=no-member
+        with mock.patch('openedx.core.djangoapps.catalog.utils.get_course_runs', return_value={
+            course_id: self.minimum_catalog_course_run_object(course_id),
+        }):
+            data = utils.ProgramDataExtender(self.program, self.user).extend()
 
-        self._assert_supplemented(
-            data,
-            is_enrollment_open=is_enrollment_open,
-            enrollment_open_date=strftime_localized(self.course.enrollment_start, 'SHORT_DATE'),
-        )
+            self._assert_supplemented(
+                data,
+                is_enrollment_open=is_enrollment_open,
+                enrollment_open_date=strftime_localized(self.course.enrollment_start, 'SHORT_DATE'),
+            )
 
     def test_no_enrollment_start_date(self):
         """Verify that a closed course with no explicit enrollment start date doesn't cause an error.
@@ -846,12 +870,16 @@ class TestProgramDataExtender(ProgramsApiConfigMixin, ModuleStoreTestCase):
         self.course.enrollment_end = timezone.now() - datetime.timedelta(days=1)
         self.course = self.update_course(self.course, self.user.id)  # pylint: disable=no-member
 
-        data = utils.ProgramDataExtender(self.program, self.user).extend()
+        course_id = unicode(self.course.id)  # pylint: disable=no-member
+        with mock.patch('openedx.core.djangoapps.catalog.utils.get_course_runs', return_value={
+            course_id: self.minimum_catalog_course_run_object(course_id),
+        }):
+            data = utils.ProgramDataExtender(self.program, self.user).extend()
 
-        self._assert_supplemented(
-            data,
-            is_enrollment_open=False,
-        )
+            self._assert_supplemented(
+                data,
+                is_enrollment_open=False,
+            )
 
     @ddt.data(True, False)
     @mock.patch(UTILS_MODULE + '.certificate_api.certificate_downloadable_status')
@@ -862,23 +890,31 @@ class TestProgramDataExtender(ProgramsApiConfigMixin, ModuleStoreTestCase):
         mock_get_cert_data.return_value = {'uuid': test_uuid} if is_uuid_available else {}
         mock_html_certs_enabled.return_value = True
 
-        data = utils.ProgramDataExtender(self.program, self.user).extend()
+        course_id = unicode(self.course.id)  # pylint: disable=no-member
+        with mock.patch('openedx.core.djangoapps.catalog.utils.get_course_runs', return_value={
+            course_id: self.minimum_catalog_course_run_object(course_id),
+        }):
+            data = utils.ProgramDataExtender(self.program, self.user).extend()
 
-        expected_url = reverse(
-            'certificates:render_cert_by_uuid',
-            kwargs={'certificate_uuid': test_uuid}
-        ) if is_uuid_available else None
+            expected_url = reverse(
+                'certificates:render_cert_by_uuid',
+                kwargs={'certificate_uuid': test_uuid}
+            ) if is_uuid_available else None
 
-        self._assert_supplemented(data, certificate_url=expected_url)
+            self._assert_supplemented(data, certificate_url=expected_url)
 
     @ddt.data(-1, 0, 1)
     def test_course_course_ended(self, days_offset):
         self.course.end = timezone.now() + datetime.timedelta(days=days_offset)
         self.course = self.update_course(self.course, self.user.id)  # pylint: disable=no-member
 
-        data = utils.ProgramDataExtender(self.program, self.user).extend()
+        course_id = unicode(self.course.id)  # pylint: disable=no-member
+        with mock.patch('openedx.core.djangoapps.catalog.utils.get_course_runs', return_value={
+            course_id: self.minimum_catalog_course_run_object(course_id),
+        }):
+            data = utils.ProgramDataExtender(self.program, self.user).extend()
 
-        self._assert_supplemented(data)
+            self._assert_supplemented(data)
 
     @mock.patch(UTILS_MODULE + '.get_organization_by_short_name')
     def test_organization_logo_exists(self, mock_get_organization_by_short_name):

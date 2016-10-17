@@ -2,12 +2,11 @@
 Serializer for user API
 """
 from django.conf import settings
-from opaque_keys.edx.keys import CourseKey
 from rest_framework import serializers
 from rest_framework.reverse import reverse
 
 from courseware.access import has_access
-from openedx.core.djangoapps.catalog.utils import get_run_marketing_urls, get_course_runs
+from openedx.core.djangoapps.catalog.utils import get_run_marketing_urls
 import request_cache
 from student.models import CourseEnrollment, User
 from certificates.api import certificate_downloadable_status
@@ -23,6 +22,10 @@ class CourseOverviewField(serializers.RelatedField):
         request_cache_dict = request_cache.get_cache('course_enrollment')
         course_id = unicode(course_overview.id)
         request = self.context.get('request')
+
+        print "\n request_cache_dict \n"
+        print request_cache_dict.get('course_marketing_url_dict')
+
         return {
             # identifiers
             'id': course_id,

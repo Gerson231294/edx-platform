@@ -5,7 +5,9 @@ Tests for users API
 import datetime
 
 import ddt
+import httpretty
 from mock import patch
+import mock
 from nose.plugins.attrib import attr
 import pytz
 from django.conf import settings
@@ -26,6 +28,7 @@ from courseware.access_response import (
 )
 from course_modes.models import CourseMode
 from lms.djangoapps.grades.tests.utils import mock_passing_grade
+from openedx.core.djangoapps.catalog.tests.mixins import CatalogIntegrationMixin
 from openedx.core.lib.courses import course_image_url
 from student.models import CourseEnrollment
 from util.milestones_helpers import set_prerequisite_courses
@@ -463,7 +466,8 @@ class TestCourseStatusPATCH(CourseStatusAPITestCase, MobileAuthUserTestMixin,
 @attr(shard=2)
 @patch.dict(settings.FEATURES, {'ENABLE_MKTG_SITE': True})
 @override_settings(MKTG_URLS={'ROOT': 'dummy-root'})
-class TestCourseEnrollmentSerializer(MobileAPITestCase, MilestonesTestCaseMixin):
+@httpretty.activate
+class TestCourseEnrollmentSerializer(MobileAPITestCase, MilestonesTestCaseMixin, CatalogIntegrationMixin):
     """
     Test the course enrollment serializer
     """
@@ -472,6 +476,7 @@ class TestCourseEnrollmentSerializer(MobileAPITestCase, MilestonesTestCaseMixin)
         self.login_and_enroll()
         self.request = RequestFactory().get('/')
         self.request.user = self.user
+        self.catalog_integration = self.create_catalog_integration()
 
     def test_success(self):
         serialized = CourseEnrollmentSerializer(
@@ -493,3 +498,45 @@ class TestCourseEnrollmentSerializer(MobileAPITestCase, MilestonesTestCaseMixin)
         ).data
         self.assertEqual(serialized['course']['number'], self.course.display_coursenumber)
         self.assertEqual(serialized['course']['org'], self.course.display_organization)
+
+    @mock.patch.dict('django.conf.settings.FEATURES', {'ENABLE_MKTG_SITE': True})
+    def test_course_about_marketing_url(self):
+        course_id = unicode(self.course.id)
+        course_keys = [course_id]
+        self.register_catalog_course_run_response(
+            course_keys,
+            [{
+                "key": course_id,
+                "marketing_url": "https://marketing-url/course/course-title-{}".format(course_id),
+                "test_key": "test_value",
+            }]
+        )
+        CourseEnrollmentSerializer.set_course_catalog(self.request.user, course_keys)
+        serialized = CourseEnrollmentSerializer(
+            CourseEnrollment.enrollments_for_user(self.user)[0],
+            context={'request': self.request},
+        ).data
+        self.assertEqual(
+            serialized['course']['course_about'], "https://marketing-url/course/course-title-{}".format(course_id)
+        )
+
+    @mock.patch.dict('django.conf.settings.FEATURES', {'ENABLE_MKTG_SITE': False})
+    def test_course_about_lms_url(self):
+        course_id = unicode(self.course.id)
+        course_keys = [course_id]
+        self.register_catalog_course_run_response(
+            course_keys,
+            [{
+                "key": course_id,
+                "marketing_url": "https://marketing-url/course/course-title-{}".format(course_id),
+                "test_key": "test_value",
+            }]
+        )
+        CourseEnrollmentSerializer.set_course_catalog(self.request.user, course_keys)
+        serialized = CourseEnrollmentSerializer(
+            CourseEnrollment.enrollments_for_user(self.user)[0],
+            context={'request': self.request},
+        ).data
+        self.assertEqual(
+            serialized['course']['course_about'], "http://localhost:8000/courses/{}/about".format(course_id)
+        )

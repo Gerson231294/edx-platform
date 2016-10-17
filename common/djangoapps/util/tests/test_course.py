@@ -1,15 +1,10 @@
 """
 Tests for course utils.
 """
-import json
-import urllib
-from django.core.cache import caches, cache
+from django.core.cache import cache
 
-from django.test import TestCase
 import httpretty
 import mock
-from openedx.core.lib.edx_api_utils import get_edx_api_data
-from xmodule.modulestore.tests.factories import check_exact_number_of_calls
 from openedx.core.djangolib.testing.utils import CacheIsolationTestCase
 from openedx.core.djangoapps.catalog.tests.mixins import CatalogIntegrationMixin
 from student.tests.factories import UserFactory
@@ -35,10 +30,16 @@ class CourseAboutLinkTestCase(CatalogIntegrationMixin, CacheIsolationTestCase):
         Get URL for about page, no marketing site.
         """
         with mock.patch.dict('django.conf.settings.FEATURES', {'ENABLE_MKTG_SITE': False}):
-            self.assertEquals(get_link_for_about_page(self.course_key, self.user), "http://localhost:8000/courses/foo/bar/baz/about")
+            self.assertEquals(
+                get_link_for_about_page(self.course_key, self.user), "http://localhost:8000/courses/foo/bar/baz/about"
+            )
         with mock.patch.dict('django.conf.settings.FEATURES', {'ENABLE_MKTG_SITE': True}):
-            self.register_catalog_course_run_response(self.course_key, [{"key": self.course_key, "marketing_url": None}])
-            self.assertEquals(get_link_for_about_page(self.course_key, self.user), "http://localhost:8000/courses/foo/bar/baz/about")
+            self.register_catalog_course_run_response(
+                self.course_key, [{"key": self.course_key, "marketing_url": None}]
+            )
+            self.assertEquals(
+                get_link_for_about_page(self.course_key, self.user), "http://localhost:8000/courses/foo/bar/baz/about"
+            )
 
     @mock.patch.dict('django.conf.settings.FEATURES', {'ENABLE_MKTG_SITE': True})
     #@mock.patch('openedx.core.lib.edx_api_utils.get_edx_api_data')
@@ -64,8 +65,6 @@ class CourseAboutLinkTestCase(CatalogIntegrationMixin, CacheIsolationTestCase):
             )
             self.assertEqual(0, mock_method.call_count)
 
-
-
         #self.assertEqual(1, mocked_code.call_count)
         #with mock.patch.object(caches['default'], 'get_many', wraps=caches['default'].get_many) as mocked_code:
         #with mock.create_autospec(get_edx_api_data, return_value=[]) as mocked_code:
@@ -73,7 +72,6 @@ class CourseAboutLinkTestCase(CatalogIntegrationMixin, CacheIsolationTestCase):
 
         #with mock.patch('openedx.core.lib.edx_api_utils.get_edx_api_data') as mocked_code:
         #with mock.patch('openedx.core.lib.edx_api_utils.get_edx_api_data') as mock_method:
-
 
         #self.assertIsNotNone(cache.get_many([course_key]))
 

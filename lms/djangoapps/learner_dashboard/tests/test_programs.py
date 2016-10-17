@@ -16,6 +16,7 @@ from edx_oauth2_provider.tests.factories import ClientFactory
 import httpretty
 import mock
 from provider.constants import CONFIDENTIAL
+from openedx.core.djangoapps.catalog.tests.mixins import CatalogIntegrationMixin
 
 from openedx.core.djangoapps.credentials.models import CredentialsApiConfig
 from openedx.core.djangoapps.credentials.tests import factories as credentials_factories
@@ -282,8 +283,7 @@ class TestProgramListing(ProgramsApiConfigMixin, CredentialsApiConfigMixin, Shar
 @httpretty.activate
 @override_settings(MKTG_URLS={'ROOT': 'https://www.example.com'})
 @unittest.skipUnless(settings.ROOT_URLCONF == 'lms.urls', 'Test only valid in lms')
-@mock.patch(UTILS_MODULE + '.get_run_marketing_url', mock.Mock(return_value=MARKETING_URL))
-class TestProgramDetails(ProgramsApiConfigMixin, SharedModuleStoreTestCase):
+class TestProgramDetails(ProgramsApiConfigMixin, SharedModuleStoreTestCase, CatalogIntegrationMixin):
     """Unit tests for the program details page."""
     program_id = 123
     password = 'test'
@@ -295,9 +295,9 @@ class TestProgramDetails(ProgramsApiConfigMixin, SharedModuleStoreTestCase):
 
         ClientFactory(name=ProgramsApiConfig.OAUTH2_CLIENT_NAME, client_type=CONFIDENTIAL)
 
-        course = CourseFactory()
+        cls.course = CourseFactory()
         organization = programs_factories.Organization()
-        run_mode = programs_factories.RunMode(course_key=unicode(course.id))  # pylint: disable=no-member
+        run_mode = programs_factories.RunMode(course_key=unicode(cls.course.id))  # pylint: disable=no-member
         course_code = programs_factories.CourseCode(run_modes=[run_mode])
 
         cls.data = programs_factories.Program(
@@ -349,21 +349,25 @@ class TestProgramDetails(ProgramsApiConfigMixin, SharedModuleStoreTestCase):
         """
         Verify that login is required to access the page.
         """
-        self.create_programs_config()
-        self.mock_programs_api(self.data)
+        course_id = unicode(self.course.id)  # pylint: disable=no-member
+        with mock.patch('openedx.core.djangoapps.catalog.utils.get_course_runs', return_value={
+            course_id: self.minimum_catalog_course_run_object(course_id),
+        }):
+            self.create_programs_config()
+            self.mock_programs_api(self.data)
 
-        self.client.logout()
+            self.client.logout()
 
-        response = self.client.get(self.url)
-        self.assertRedirects(
-            response,
-            '{}?next={}'.format(reverse('signin_user'), self.url)
-        )
+            response = self.client.get(self.url)
+            self.assertRedirects(
+                response,
+                '{}?next={}'.format(reverse('signin_user'), self.url)
+            )
 
-        self.client.login(username=self.user.username, password=self.password)
+            self.client.login(username=self.user.username, password=self.password)
 
-        response = self.client.get(self.url)
-        self.assert_program_data_present(response)
+            response = self.client.get(self.url)
+            self.assert_program_data_present(response)
 
     def test_404_if_disabled(self):
         """

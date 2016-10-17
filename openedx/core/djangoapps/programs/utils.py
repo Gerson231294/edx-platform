@@ -406,7 +406,8 @@ class ProgramDataExtender(object):
         run_mode['is_enrollment_open'] = self.enrollment_start <= timezone.now() < enrollment_end
 
     def _attach_run_mode_marketing_url(self, run_mode):
-        run_mode['marketing_url'] = get_run_marketing_urls(self.user, [self.course_key])
+        course_marketing_url_dict = get_run_marketing_urls(self.user, [unicode(self.course_key)])
+        run_mode['marketing_url'] = course_marketing_url_dict.get(unicode(self.course_key))
 
     def _attach_run_mode_start_date(self, run_mode):
         run_mode['start_date'] = self.course_overview.start_datetime_text()
