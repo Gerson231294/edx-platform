@@ -33,22 +33,15 @@
             this.instructor_tasks = new (PendingInstructorTasks())(this.$section);
             this.$error_msg = this.$section.find('#error-msg');
             this.$list_sale_csv_btn.click(function() {
-                var url;
-                url = eCom.$list_sale_csv_btn.data('endpoint');
-                url += '/csv';
-                location.href = url;
+                location.href = eCom.$list_sale_csv_btn.data('endpoint') + '/csv';
                 return location.href;
             });
             this.$list_order_sale_csv_btn.click(function() {
-                var url;
-                url = eCom.$list_order_sale_csv_btn.data('endpoint');
-                location.href = url;
+                location.href = eCom.$list_order_sale_csv_btn.data('endpoint');
                 return location.href;
             });
             this.$download_coupon_codes.click(function() {
-                var url;
-                url = eCom.$download_coupon_codes.data('endpoint');
-                location.href = url;
+                location.href = eCom.$download_coupon_codes.data('endpoint');
                 return location.href;
             });
             this.$download_registration_codes_form.submit(function() {

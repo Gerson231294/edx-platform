@@ -43,7 +43,7 @@
     };
 
     this.createTaskListTable = function($tableTasks, tasksData) {
-        var $tablePlaceholder, columns, grid, options, tableData;
+        var $tablePlaceholder, columns, options, tableData;
         $tableTasks.empty();
         options = {
             enableCellNavigation: true,
@@ -141,8 +141,7 @@
             class: 'slickgrid'
         });
         $tableTasks.append($tablePlaceholder);
-        grid = new Slick.Grid($tablePlaceholder, tableData, columns, options);
-        return grid;
+        return new Slick.Grid($tablePlaceholder, tableData, columns, options);
     };
 
     subjectFormatter = function(row, cell, value) {

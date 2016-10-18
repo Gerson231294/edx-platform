@@ -25,8 +25,7 @@
             this.$certificate_display_table = this.$container.find('.certificate-data-display-table');
             this.$certificates_request_err = this.$container.find('.issued-certificates-error.request-response-error');
             this.$list_issued_certificate_table_btn.click(function() {
-                var url;
-                url = dataDownloadCert.$list_issued_certificate_table_btn.data('endpoint');
+                var url = dataDownloadCert.$list_issued_certificate_table_btn.data('endpoint');
                 dataDownloadCert.clear_ui();
                 dataDownloadCert.$certificate_display_table.text(gettext('Loading data...'));
                 return $.ajax({
@@ -74,11 +73,8 @@
                 });
             });
             this.$list_issued_certificate_csv_btn.click(function() {
-                var url;
                 dataDownloadCert.clear_ui();
-                url = dataDownloadCert.$list_issued_certificate_csv_btn.data('endpoint');
-                location.href = url + '?csv=true';
-                return location.href;
+                location.href = dataDownloadCert.$list_issued_certificate_csv_btn.data('endpoint') + '?csv=true';
             });
         }
 
@@ -122,14 +118,10 @@
             this.instructor_tasks = new (PendingInstructorTasks())(this.$section);
             this.clear_display();
             this.$list_anon_btn.click(function() {
-                var url;
-                url = dataDownloadObj.$list_anon_btn.data('endpoint');
-                location.href = url;
-                return location.href;
+                location.href = dataDownloadObj.$list_anon_btn.data('endpoint');
             });
             this.$proctored_exam_csv_btn.click(function() {
-                var url;
-                url = dataDownloadObj.$proctored_exam_csv_btn.data('endpoint');
+                var url = dataDownloadObj.$proctored_exam_csv_btn.data('endpoint');
                 return $.ajax({
                     type: 'POST',
                     dataType: 'json',
@@ -153,8 +145,7 @@
                 });
             });
             this.$survey_results_csv_btn.click(function() {
-                var url;
-                url = dataDownloadObj.$survey_results_csv_btn.data('endpoint');
+                var url = dataDownloadObj.$survey_results_csv_btn.data('endpoint');
                 return $.ajax({
                     type: 'POST',
                     dataType: 'json',
@@ -178,10 +169,8 @@
                 });
             });
             this.$list_studs_csv_btn.click(function() {
-                var url;
+                var url = dataDownloadObj.$list_studs_csv_btn.data('endpoint') + '/csv';
                 dataDownloadObj.clear_display();
-                url = dataDownloadObj.$list_studs_csv_btn.data('endpoint');
-                url += '/csv';
                 return $.ajax({
                     type: 'POST',
                     dataType: 'json',
@@ -203,8 +192,7 @@
                 });
             });
             this.$list_studs_btn.click(function() {
-                var url;
-                url = dataDownloadObj.$list_studs_btn.data('endpoint');
+                var url = dataDownloadObj.$list_studs_btn.data('endpoint');
                 dataDownloadObj.clear_display();
                 dataDownloadObj.$download_display_table.text(gettext('Loading'));
                 return $.ajax({
@@ -218,7 +206,7 @@
                         );
                     },
                     success: function(data) {
-                        var $tablePlaceholder, columns, feature, grid, gridData, options;
+                        var $tablePlaceholder, columns, feature, gridData, options;
                         dataDownloadObj.clear_display();
                         options = {
                             enableCellNavigation: true,
@@ -245,15 +233,13 @@
                             class: 'slickgrid'
                         });
                         dataDownloadObj.$download_display_table.append($tablePlaceholder);
-                        grid = new window.Slick.Grid($tablePlaceholder, gridData, columns, options);
-                        return grid;
+                        return new window.Slick.Grid($tablePlaceholder, gridData, columns, options);
                     }
                 });
             });
             this.$list_problem_responses_csv_btn.click(function() {
-                var url;
+                var url = dataDownloadObj.$list_problem_responses_csv_btn.data('endpoint');
                 dataDownloadObj.clear_display();
-                url = dataDownloadObj.$list_problem_responses_csv_btn.data('endpoint');
                 return $.ajax({
                     type: 'POST',
                     dataType: 'json',
@@ -278,9 +264,8 @@
                 });
             });
             this.$list_may_enroll_csv_btn.click(function() {
-                var url;
+                var url = dataDownloadObj.$list_may_enroll_csv_btn.data('endpoint');
                 dataDownloadObj.clear_display();
-                url = dataDownloadObj.$list_may_enroll_csv_btn.data('endpoint');
                 return $.ajax({
                     type: 'POST',
                     dataType: 'json',
@@ -302,8 +287,7 @@
                 });
             });
             this.$grade_config_btn.click(function() {
-                var url;
-                url = dataDownloadObj.$grade_config_btn.data('endpoint');
+                var url = dataDownloadObj.$grade_config_btn.data('endpoint');
                 return $.ajax({
                     type: 'POST',
                     dataType: 'json',
@@ -322,9 +306,8 @@
                 });
             });
             this.$async_report_btn.click(function(e) {
-                var url;
+                var url = $(e.target).data('endpoint');
                 dataDownloadObj.clear_display();
-                url = $(e.target).data('endpoint');
                 return $.ajax({
                     type: 'POST',
                     dataType: 'json',

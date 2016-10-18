@@ -27,12 +27,9 @@ such that the value can be defined later than this assignment (file load order).
     MemberListWidget = (function() {
         function memberListWidget($container, params) {
             var templateHtml, condition,
-                memberListParams = params,
+                memberListParams = params || {},
                 memberlistwidget = this;
             this.$container = $container;
-            if (memberListParams == null) {
-                memberListParams = {};
-            }
             memberListParams = _.defaults(memberListParams, {
                 title: 'Member List',
                 info: 'Use this list to manage members.',
@@ -47,7 +44,7 @@ such that the value can be defined later than this assignment (file load order).
             );
             this.$('input[type="button"].add').click(function() {
                 condition = typeof memberListParams.add_handler === 'function';
-                return condition ? memberListParams.add_handler(memberlistwidget.$('.add-field').val()) : void 0;
+                return condition ? memberListParams.add_handler(memberlistwidget.$('.add-field').val()) : undefined;
             });
         }
 
@@ -168,13 +165,13 @@ such that the value can be defined later than this assignment (file load order).
 
         authListWidget.prototype.clear_errors = function() {
             var ref, result;
-            result = (this.$error_section) != null ? ref.text('') : void 0;
+            result = (this.$error_section) != null ? ref.text('') : undefined;
             return result;
         };
 
         authListWidget.prototype.show_errors = function(msg) {
             var ref, result;
-            result = (this.$error_section) != null ? ref.text(msg) : void 0;
+            result = (this.$error_section) != null ? ref.text(msg) : undefined;
             return result;
         };
 
@@ -188,7 +185,7 @@ such that the value can be defined later than this assignment (file load order).
                     rolename: this.rolename
                 },
                 success: function(data) {
-                    return typeof cb === 'function' ? cb(null, data[authlistwidgetgetmemberlist.rolename]) : void 0;
+                    return typeof cb === 'function' ? cb(null, data[authlistwidgetgetmemberlist.rolename]) : undefined;
                 }
             });
         };
@@ -208,7 +205,7 @@ such that the value can be defined later than this assignment (file load order).
                     return authlistwidgetmemberaccess.member_response(data);
                 },
                 error: statusAjaxError(function() {
-                    return typeof cb === 'function' ? cb(gettext("Error changing user's permissions.")) : void 0;
+                    return typeof cb === 'function' ? cb(gettext("Error changing user's permissions.")) : undefined;
                 })
             });
         };
@@ -894,7 +891,7 @@ such that the value can be defined later than this assignment (file load order).
                     action: action
                 },
                 success: function(data) {
-                    return typeof cb === 'function' ? cb(data) : void 0;
+                    return typeof cb === 'function' ? cb(data) : undefined;
                 },
                 error: statusAjaxError(function() {
                     return ths.$request_response_error.text(gettext("Error changing user's permissions."));

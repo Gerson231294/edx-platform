@@ -125,8 +125,7 @@
                 }
             });
             this.$btn_task_history_email.click(function() {
-                var url;
-                url = sendemail.$btn_task_history_email.data('endpoint');
+                var url = sendemail.$btn_task_history_email.data('endpoint');
                 return $.ajax({
                     type: 'POST',
                     dataType: 'json',
@@ -151,8 +150,7 @@
                 });
             });
             this.$btn_task_history_email_content.click(function() {
-                var url;
-                url = sendemail.$btn_task_history_email_content.data('endpoint');
+                var url = sendemail.$btn_task_history_email_content.data('endpoint');
                 return $.ajax({
                     type: 'POST',
                     dataType: 'json',

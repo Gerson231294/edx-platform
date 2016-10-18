@@ -137,7 +137,7 @@
         };
 
         extensions.prototype.display_grid = function(data) {
-            var $tablePlaceholder, col, columns, grid, gridData, options;
+            var $tablePlaceholder, col, columns, gridData, options;
             this.clear_display();
             this.$grid_text.text(data.title);
             options = {
@@ -165,8 +165,7 @@
                 style: 'min-height: 400px'
             });
             this.$grid_table.append($tablePlaceholder);
-            grid = new window.Slick.Grid($tablePlaceholder, gridData, columns, options);
-            return grid;
+            return new window.Slick.Grid($tablePlaceholder, gridData, columns, options);
         };
 
         extensions.prototype.clear_display = function() {
@@ -179,15 +178,15 @@
         return extensions;
     }());
 
-    if (typeof _ !== 'undefined' && _ !== null) {
-        _.defaults(window, {
-            InstructorDashboard: {}
-        });
-        _.defaults(window.InstructorDashboard, {
-            sections: {}
-        });
-        _.defaults(window.InstructorDashboard.sections, {
-            Extensions: Extensions
-        });
-    }
+    _.defaults(window, {
+        InstructorDashboard: {}
+    });
+
+    _.defaults(window.InstructorDashboard, {
+        sections: {}
+    });
+
+    _.defaults(window.InstructorDashboard.sections, {
+        Extensions: Extensions
+    });
 }).call(this);
