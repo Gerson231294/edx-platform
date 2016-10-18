@@ -210,16 +210,15 @@
         };
 
         Problem.prototype.renderProgressState = function() {
-
-            var earned, graded, possible, progress, progressTemplate, curScore, totalScore, attemptsUsed;
+            var graded, progress, progressTemplate, curScore, totalScore, attemptsUsed;
             curScore = this.el.data('problem-score');
             totalScore = this.el.data('problem-score-total');
             attemptsUsed = this.el.data('attempts-used');
             graded = this.el.data('graded');
 
-            if (curScore === undefined || totalScore === undefined){
-                progress = ''
-            } else if(attemptsUsed == 0 || totalScore === 0) {
+            if (curScore === undefined || totalScore === undefined) {
+                progress = '';
+            } else if (attemptsUsed === 0 || totalScore === 0) {
                 // Render 'x point(s) possible' if student has not yet attempted question
                 if (graded === 'True' && totalScore !== 0) {
                     progressTemplate = ngettext(
@@ -275,8 +274,11 @@
         };
 
         Problem.prototype.forceUpdate = function(response) {
-            response.progress_changed = true;
-            return this.updateProgress(response);
+            this.el.data('problem-score', response.current_score);
+            this.el.data('problem-score-total', response.total_score);
+            this.el.data('attempts-used', response.attempts_used);
+            this.el.trigger('progressChanged');
+            return this.renderProgressState();
         };
 
         Problem.prototype.queueing = function(focusCallback) {
