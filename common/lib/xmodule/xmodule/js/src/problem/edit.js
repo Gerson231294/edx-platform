@@ -620,9 +620,9 @@
                             }
 
                             // Additional answer case or= [e.g. or= 10]
-                            // Since values[0] which is firstAnswer, so we will not include this in additional answers.
+                            // Since answerValues[0] is firstAnswer, so we will not include this in additional answers.
                             additionalAnswerString = '';
-                            for (i = 1; i < answerValues.length; i += 1) {
+                            for (i = 1; i < answerValues.length; i++) {
                                 additionalHintLine = '';
                                 additionalTextHint = extractHint(answerValues[i]);
                                 orMatch = /^or\=\s*(.*)/.exec(additionalTextHint.nothint);
@@ -635,7 +635,7 @@
                                             additionalTextHint.hint + '</correcthint>';
                                     }
                                     // Do not add additional_answer if additional answer is not numerical or
-                                    // contains range tolerancec case.
+                                    // contains range tolerance case.
                                     if (isNaN(parseFloat(additionalAnswer)) || isRangeToleranceCase(additionalAnswer)) {
                                         continue;
                                     }

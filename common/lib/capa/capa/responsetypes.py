@@ -1936,7 +1936,7 @@ class NumericalResponse(LoncapaResponse):
                 if compare_with_tolerance(student_float, correct_float, expanded_tolerance):
                     is_correct = 'partially-correct'
 
-        # Restart self.additional_answer_index to -1 so that we always have a fresh index to look up.
+        # Reset self.additional_answer_index to -1 so that we always have a fresh index to look up.
         self.additional_answer_index = -1
 
         # Compare with additional answers.
@@ -1987,7 +1987,13 @@ class NumericalResponse(LoncapaResponse):
 
     def set_cmap_msg(self, student_answers, new_cmap, hint_type, hint_index):
         """
-        Set cmap msg property.
+        Sets feedback to correct hint node in correct map.
+
+        Arguments:
+            student_answers (dict): Dict containing student input.
+            new_cmap (dict): Dict containing correct map properties.
+            hint_type (str): Hint type, either `correcthint` or `additional_answer`
+            hint_index (int): Index of the hint node
         """
         # Note: using self.id here, not the more typical self.answer_id
         hint_nodes = self.xml.xpath('//numericalresponse[@id=$id]/' + hint_type, id=self.id)
@@ -2012,7 +2018,6 @@ class NumericalResponse(LoncapaResponse):
                 # Answer is not an additional answer.
                 if self.additional_answer_index == -1:
                     self.set_cmap_msg(student_answers, new_cmap, 'correcthint', 0)
-                # Student answer is among the additional answers.
                 else:
                     self.set_cmap_msg(student_answers, new_cmap, 'additional_answer', self.additional_answer_index)
 
