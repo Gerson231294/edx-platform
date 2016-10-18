@@ -110,7 +110,7 @@ def submit_rescore_problem_for_student(request, usage_key, student, only_if_high
     # check arguments:  let exceptions return up to the caller.
     check_arguments_for_rescoring(usage_key)
 
-    task_type = 'rescore_problem'
+    task_type = 'rescore_problem_if_higher' if only_if_higher else 'rescore_problem'
     task_class = rescore_problem
     task_input, task_key = encode_problem_and_student_input(usage_key, student)
     task_input.update({'only_if_higher': only_if_higher})
