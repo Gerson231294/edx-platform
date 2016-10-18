@@ -210,66 +210,55 @@
         };
 
         Problem.prototype.renderProgressState = function() {
-            var a, detail, earned, graded, possible, progress, progressTemplate, status;
-            detail = this.el.data('progress_detail');
-            status = this.el.data('progress_status');
+
+            var earned, graded, possible, progress, progressTemplate, curScore, totalScore, attemptsUsed;
+            curScore = this.el.data('problem-score');
+            totalScore = this.el.data('problem-score-total');
+            attemptsUsed = this.el.data('attempts-used');
             graded = this.el.data('graded');
 
-            // Render 'x/y point(s)' if student has attempted question
-            if (status !== 'none' && (detail !== null && detail !== undefined) && (jQuery.type(detail) === 'string') &&
-                detail.indexOf('/') > 0) {
-                a = detail.split('/');
-                earned = parseFloat(a[0]);
-                possible = parseFloat(a[1]);
-                if (graded === 'True' && possible !== 0) {
-                    progressTemplate = ngettext(
-                        // This comment needs to be on one line to be properly scraped for the translators.
-                        // Translators: %(earned)s is the number of points earned. %(possible)s is the total number of points (examples: 0/1, 1/1, 2/3, 5/10). The total number of points will always be at least 1. We pluralize based on the total number of points (example: 0/1 point; 1/2 points);
-                        '%(earned)s/%(possible)s point (graded)', '%(earned)s/%(possible)s points (graded)',
-                        possible
-                    );
-                } else {
-                    progressTemplate = ngettext(
-                        // This comment needs to be on one line to be properly scraped for the translators.
-                        // Translators: %(earned)s is the number of points earned. %(possible)s is the total number of points (examples: 0/1, 1/1, 2/3, 5/10). The total number of points will always be at least 1. We pluralize based on the total number of points (example: 0/1 point; 1/2 points);
-                        '%(earned)s/%(possible)s point (ungraded)', '%(earned)s/%(possible)s points (ungraded)',
-                        possible
-                    );
-                }
-                progress = interpolate(
-                    progressTemplate, {
-                        earned: earned,
-                        possible: possible
-                    }, true
-                );
-            }
-
-            // Render 'x point(s) possible' if student has not yet attempted question
-            // Status is set to none when a user has a score of 0, and 0 when the problem has a weight of 0.
-            if (status === 'none' || status === 0) {
-                if ((detail !== null && detail !== undefined) && (jQuery.type(detail) === 'string') &&
-                    detail.indexOf('/') > 0) {
-                    a = detail.split('/');
-                    possible = parseFloat(a[1]);
-                } else {
-                    possible = 0;
-                }
-                if (graded === 'True' && possible !== 0) {
+            if (curScore === undefined || totalScore === undefined){
+                progress = ''
+            } else if(attemptsUsed == 0 || totalScore === 0) {
+                // Render 'x point(s) possible' if student has not yet attempted question
+                if (graded === 'True' && totalScore !== 0) {
                     progressTemplate = ngettext(
                         // Translators: %(num_points)s is the number of points possible (examples: 1, 3, 10).;
                         '%(num_points)s point possible (graded)', '%(num_points)s points possible (graded)',
-                        possible
+                        totalScore
                     );
                 } else {
                     progressTemplate = ngettext(
                         // Translators: %(num_points)s is the number of points possible (examples: 1, 3, 10).;
                         '%(num_points)s point possible (ungraded)', '%(num_points)s points possible (ungraded)',
-                        possible
+                        totalScore
+                    );
+                }
+                progress = interpolate(progressTemplate, {num_points: totalScore}, true);
+            } else {
+                // Render 'x/y point(s)' if student has attempted question
+                if (graded === 'True' && totalScore !== 0) {
+                    progressTemplate = ngettext(
+                        // This comment needs to be on one line to be properly scraped for the translators.
+                        // Translators: %(earned)s is the number of points earned. %(possible)s is the total number of points (examples: 0/1, 1/1, 2/3, 5/10). The total number of points will always be at least 1. We pluralize based on the total number of points (example: 0/1 point; 1/2 points);
+                        '%(earned)s/%(possible)s point (graded)', '%(earned)s/%(possible)s points (graded)',
+                        totalScore
+                    );
+                } else {
+                    progressTemplate = ngettext(
+                        // This comment needs to be on one line to be properly scraped for the translators.
+                        // Translators: %(earned)s is the number of points earned. %(possible)s is the total number of
+                        // points (examples: 0/1, 1/1, 2/3, 5/10). The total number of points will always be at least 1.
+                        // We pluralize based on the total number of points (example: 0/1 point; 1/2 points);
+                        '%(earned)s/%(possible)s point (ungraded)', '%(earned)s/%(possible)s points (ungraded)',
+                        totalScore
                     );
                 }
                 progress = interpolate(
-                    progressTemplate,
-                    {num_points: possible}, true
+                    progressTemplate, {
+                        earned: curScore,
+                        possible: totalScore
+                    }, true
                 );
             }
             return this.$('.problem-progress').text(progress);
@@ -277,18 +266,17 @@
 
         Problem.prototype.updateProgress = function(response) {
             if (response.progress_changed) {
-                this.el.data('progress_status', response.progress_status);
-                this.el.data('progress_detail', response.progress_detail);
+                this.el.data('problem-score', response.current_score);
+                this.el.data('problem-score-total', response.total_score);
+                this.el.data('attempts-used', response.attempts_used);
                 this.el.trigger('progressChanged');
             }
             return this.renderProgressState();
         };
 
         Problem.prototype.forceUpdate = function(response) {
-            this.el.data('progress_status', response.progress_status);
-            this.el.data('progress_detail', response.progress_detail);
-            this.el.trigger('progressChanged');
-            return this.renderProgressState();
+            response.progress_changed = true;
+            return this.updateProgress(response);
         };
 
         Problem.prototype.queueing = function(focusCallback) {
