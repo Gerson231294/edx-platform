@@ -566,34 +566,38 @@
                     // Line split here, trim off leading xxx= in each function
                     var answersList = p.split('\n'),
 
+                        isRangeToleranceCase = function (answer) {
+                            return _.contains(
+                                ['[', '('], answer[0]) && _.contains([']', ')'], answer[answer.length - 1]
+                            );
+                        },
+
+                        getAnswerData = function (answerValue) {
+                            var answerData = {},
+                                answerParams = /(.*?)\+\-\s*(.*?$)/.exec(answerValue);
+                            if (answerParams) {
+                                answerData.answer = answerParams[1].replace(/\s+/g, ''); // inputs like 5*2 +- 10
+                                answerData.default = answerParams[2];
+                            } else {
+                                answerData.answer = answerValue.replace(/\s+/g, ''); // inputs like 5*2
+                            }
+                            return answerData;
+                        },
+
                         processNumericalResponse = function (answerValues) {
-                            var firstAnswer, numericalResponseString, additionalAnswerString, textHint, hintLine;
-
-                            isRangeToleranceCase = function (answer) {
-                                return _.contains(['[', '('], answer[0]) && _.contains([']', ')'], answer[answer.length - 1])
-                            }
-
-                            getAnswerData = function (answerValue) {
-                                var answerData = {},
-                                    answerParams = /(.*?)\+\-\s*(.*?$)/.exec(answerValue);
-                                if (answerParams) {
-                                    answerData.answer = answerParams[1].replace(/\s+/g, ''); // support inputs like 5*2 +- 10
-                                    answerData.default = answerParams[2];
-                                } else {
-                                    answerData.answer = answerValue.replace(/\s+/g, ''); // support inputs like 5*2
-                                }
-                                return answerData;
-                            }
+                            var firstAnswer, numericalResponseString, additionalAnswerString, textHint, hintLine,
+                                additionalAnswer, additionalAnswerData, additionalHintLine, additionalTextHint, orMatch,
+                                answerData;
 
                             // First string case is s?= [e.g. = 100]
-                            firstAnswer = answerValues[0];
-                            firstAnswer = firstAnswer.replace(/^\=\s*/, '');
+                            firstAnswer = answerValues[0].replace(/^\=\s*/, '');
 
                             textHint = extractHint(firstAnswer);
                             hintLine = '';
                             if (textHint.hint) {
                                 firstAnswer = textHint.nothint;
-                                hintLine = '  <correcthint' + textHint.labelassign + '>' + textHint.hint + '</correcthint>\n'
+                                hintLine = '  <correcthint' + textHint.labelassign + '>' +
+                                    textHint.hint + '</correcthint>\n';
                             }
 
                             // If answer is not numerical
@@ -607,34 +611,35 @@
                                 // = (5*2)*3 should not be used as range tolerance
                                 numericalResponseString = '<numericalresponse answer="' + firstAnswer + '">\n';
                             } else {
-                                var answerData = getAnswerData(firstAnswer);
+                                answerData = getAnswerData(firstAnswer);
                                 numericalResponseString = '<numericalresponse answer="' + answerData.answer + '">\n';
                                 if (answerData.default) {
-                                    numericalResponseString += '  <responseparam type="tolerance" default="' + answerData.default + '" />\n';
+                                    numericalResponseString += '  <responseparam type="tolerance" default="' +
+                                        answerData.default + '" />\n';
                                 }
                             }
 
                             // Additional answer case or= [e.g. or= 10]
                             // Since values[0] which is firstAnswer, so we will not include this in additional answers.
                             additionalAnswerString = '';
-                            for (var i = 1; i < answerValues.length; i += 1) {
-                                var additionalAnswer,
-                                    additionalAnswerData,
-                                    additionalHintLine = '',
-                                    additionalTextHint = extractHint(answerValues[i]),
-                                    orMatch = /^or\=\s*(.*)/.exec(additionalTextHint.nothint);
+                            for (i = 1; i < answerValues.length; i += 1) {
+                                additionalHintLine = '';
+                                additionalTextHint = extractHint(answerValues[i]);
+                                orMatch = /^or\=\s*(.*)/.exec(additionalTextHint.nothint);
                                 if (orMatch) {
                                     additionalAnswerData = getAnswerData(orMatch[1]);
                                     additionalAnswer = additionalAnswerData.answer;
                                     if (additionalTextHint.hint) {
-                                        additionalHintLine = '<correcthint' + additionalTextHint.labelassign + '>' + additionalTextHint.hint + '</correcthint>';
+                                        additionalHintLine = '<correcthint' +
+                                            additionalTextHint.labelassign + '>' +
+                                            additionalTextHint.hint + '</correcthint>';
                                     }
                                     // Do not add additional_answer if additional answer is not numerical or
                                     // contains range tolerancec case.
                                     if (isNaN(parseFloat(additionalAnswer)) || isRangeToleranceCase(additionalAnswer)) {
                                         continue;
                                     }
-                                    // Right now, additional_answer does not support responseparam (default tolerance etc.)
+                                    // Additional_answer does not support responseparam (default tolerance etc.)
                                     additionalAnswerString += '  <additional_answer answer="' + additionalAnswer + '">';
                                     additionalAnswerString += additionalHintLine;
                                     additionalAnswerString += '</additional_answer>\n';
@@ -697,7 +702,7 @@
                             return string;
                         };
 
-                    return processNumericalResponse(answersList[0]) || processStringResponse(answersList);
+                    return processNumericalResponse(answersList) || processStringResponse(answersList);
                 });
 
 
