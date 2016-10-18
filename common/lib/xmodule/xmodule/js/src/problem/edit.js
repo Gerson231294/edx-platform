@@ -566,13 +566,13 @@
                     // Line split here, trim off leading xxx= in each function
                     var answersList = p.split('\n'),
 
-                        isRangeToleranceCase = function (answer) {
+                        isRangeToleranceCase = function(answer) {
                             return _.contains(
                                 ['[', '('], answer[0]) && _.contains([']', ')'], answer[answer.length - 1]
                             );
                         },
 
-                        getAnswerData = function (answerValue) {
+                        getAnswerData = function(answerValue) {
                             var answerData = {},
                                 answerParams = /(.*?)\+\-\s*(.*?$)/.exec(answerValue);
                             if (answerParams) {
@@ -584,7 +584,7 @@
                             return answerData;
                         },
 
-                        processNumericalResponse = function (answerValues) {
+                        processNumericalResponse = function(answerValues) {
                             var firstAnswer, numericalResponseString, additionalAnswerString, textHint, hintLine,
                                 additionalAnswer, additionalAnswerData, additionalHintLine, additionalTextHint, orMatch,
                                 answerData;
