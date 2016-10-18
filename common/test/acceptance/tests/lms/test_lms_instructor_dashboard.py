@@ -543,11 +543,11 @@ class EntranceExamGradeTest(BaseInstructorDashboardTest):
             When I click the Show Background Task History for Student Button
             under Entrance Exam Grade Adjustment after entering a valid student
             email address or username
-            Then I should be shown an table listing all background tasks
+            Then I should be shown a table listing all background tasks
         """
         self.entrance_exam_admin.set_student_email_or_username(self.student_identifier)
         self.entrance_exam_admin.task_history_button.click()
-        self.assertTrue(self.entrance_exam_admin.background_task_history_table.is_present())
+        self.entrance_exam_admin.wait_for_task_history_table()
 
 
 @attr(shard=7)

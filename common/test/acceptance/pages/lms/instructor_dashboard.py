@@ -1036,7 +1036,9 @@ class StudentAdminPage(PageObject):
     RESCORE_BUTTON_NAME = None
     RESCORE_IF_HIGHER_BUTTON_NAME = None
     DELETE_STATE_BUTTON_NAME = None
+
     BACKGROUND_TASKS_BUTTON_NAME = None
+    TASK_HISTORY_TABLE_NAME = None
 
     def is_browser_on_page(self):
         """
@@ -1115,6 +1117,33 @@ class StudentAdminPage(PageObject):
         """
         return self._input_with_name(self.BACKGROUND_TASKS_BUTTON_NAME)
 
+    def wait_for_task_history_table(self):
+        """
+        Waits until the task history table is visible.
+        """
+        def check_func():
+            """
+            Promise Check Function
+            """
+            query = self.q(css="{} .{}".format(self.CONTAINER, self.TASK_HISTORY_TABLE_NAME))
+            return query.visible, query
+
+        return Promise(check_func, "Waiting for student admin task history table to be visible.").fulfill()
+
+    def wait_for_task_completion(self, expected_task_string):
+        """
+        Waits until the task history table is visible.
+        """
+        def check_func():
+            """
+            Promise Check Function
+            """
+            self.task_history_button.click()
+            table = self.wait_for_task_history_table()
+            return len(table) > 0 and expected_task_string in table.results[0].text
+
+        return EmptyPromise(check_func, "Waiting for student admin task to complete.").fulfill()
+
 
 class StudentSpecificAdmin(StudentAdminPage):
     """
@@ -1129,7 +1158,9 @@ class StudentSpecificAdmin(StudentAdminPage):
     RESCORE_BUTTON_NAME = "rescore-problem-single"
     RESCORE_IF_HIGHER_BUTTON_NAME = "rescore-problem-if-higher-single"
     DELETE_STATE_BUTTON_NAME = "delete-state-single"
+
     BACKGROUND_TASKS_BUTTON_NAME = "task-history-single"
+    TASK_HISTORY_TABLE_NAME = "task-history-single-table"
 
 
 class CourseSpecificAdmin(StudentAdminPage):
@@ -1145,7 +1176,9 @@ class CourseSpecificAdmin(StudentAdminPage):
     RESCORE_BUTTON_NAME = "rescore-problem-all"
     RESCORE_IF_HIGHER_BUTTON_NAME = "rescore-problem-all-if-higher"
     DELETE_STATE_BUTTON_NAME = None
+
     BACKGROUND_TASKS_BUTTON_NAME = "task-history-all"
+    TASK_HISTORY_TABLE_NAME = "task-history-all-table"
 
 
 class EntranceExamAdmin(StudentAdminPage):
@@ -1163,6 +1196,7 @@ class EntranceExamAdmin(StudentAdminPage):
     DELETE_STATE_BUTTON_NAME = "delete-entrance-exam-state"
 
     BACKGROUND_TASKS_BUTTON_NAME = "entrance-exam-task-history"
+    TASK_HISTORY_TABLE_NAME = "entrance-exam-task-history-table"
 
     @property
     def skip_entrance_exam_button(self):
@@ -1177,13 +1211,6 @@ class EntranceExamAdmin(StudentAdminPage):
         Returns show background task history for student button.
         """
         return self.q(css='{} .request-response-error'.format(self.CONTAINER)).first
-
-    @property
-    def background_task_history_table(self):
-        """
-        Returns background task history table.
-        """
-        return self.q(css='{} .entrance-exam-task-history-table'.format(self.CONTAINER))
 
     def are_all_buttons_visible(self):
         """
