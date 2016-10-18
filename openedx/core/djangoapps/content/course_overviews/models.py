@@ -357,8 +357,16 @@ class CourseOverview(TimeStampedModel):
         """
         Returns True if the course starts with-in given number of days otherwise returns False.
         """
-
         return course_metadata_utils.course_starts_within(self.start, days)
+
+    def retrieve_datetime(self, get_start=True):
+        """
+        Returns the desired datetime string corresponding to the course's salient date
+        formatted as an ISO string.
+        """
+        if get_start is True:
+            return self.start.strftime('%Y-%m-%dT%H:%M:%S%z')
+        return self.end.strftime('%Y-%m-%dT%H:%M:%S%z')
 
     def start_datetime_text(self, format_string="SHORT_DATE", time_zone=utc):
         """
@@ -386,9 +394,10 @@ class CourseOverview(TimeStampedModel):
             self.advertised_start,
         )
 
-    def end_datetime_text(self, format_string="SHORT_DATE", time_zone=utc):
+    def end_datetime_text(self):
         """
         Returns the end date or datetime for the course formatted as a string.
+
         """
         return course_metadata_utils.course_end_datetime_text(
             self.end,
@@ -398,7 +407,7 @@ class CourseOverview(TimeStampedModel):
         )
 
     @property
-    def sorting_score(self):
+    def sorting_score(self, format_string="SHORT_DATE", time_zone=utc):
         """
         Returns a tuple that can be used to sort the courses according
         the how "new" they are. The "newness" score is computed using a

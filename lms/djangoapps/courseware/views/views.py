@@ -741,7 +741,9 @@ def _progress(request, course_key, student_id):
         'student': student,
         'passed': is_course_passed(course, grade_summary),
         'credit_course_requirements': _credit_course_requirements(course_key, student),
-        'certificate_data': _get_cert_data(student, course, course_key, is_active, enrollment_mode)
+        'certificate_data': _get_cert_data(student, course, course_key, is_active, enrollment_mode),
+        'time_zone': request.user.preferences.model.get_value(request.user, "time_zone", None),
+        'language': request.user.preferences.model.get_value(request.user, "pref-lang", None)
     }
 
     with outer_atomic():

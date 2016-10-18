@@ -223,21 +223,26 @@ from openedx.core.lib.courses import course_image_url
         <ol class="important-dates">
           <li class="important-dates-item"><span class="icon fa fa-info-circle" aria-hidden="true"></span><p class="important-dates-item-title">${_("Course Number")}</p><span class="important-dates-item-text course-number">${course.display_number_with_default | h}</span></li>
           % if not course.start_date_is_still_default:
-            <li class="important-dates-item"><span class="icon fa fa-calendar" aria-hidden="true"></span><p class="important-dates-item-title">${_("Classes Start")}</p><span class="important-dates-item-text start-date">${course.start_datetime_text()}</span></li>
+              <%
+                  start_date = course.retrieve_datetime()
+              %>
+            <li class="important-dates-item">
+                <span class="icon fa fa-calendar" aria-hidden="true"></span>
+                <p class="important-dates-item-title">${_("Classes Start")}</p>
+                <span class="important-dates-item-text start-date localized_datetime" data-format="shortDate" data-datetime="${start_date}"></span>
+            </li>
           % endif
             ## We plan to ditch end_date (which is not stored in course metadata),
             ## but for backwards compatibility, show about/end_date blob if it exists.
             % if get_course_about_section(request, course, "end_date") or course.end:
+                <%
+                    end_date = course.retrieve_datetime(get_start=False)
+                %>
+
             <li class="important-dates-item">
                 <span class="icon fa fa-calendar" aria-hidden="true"></span>
                 <p class="important-dates-item-title">${_("Classes End")}</p>
-                <span class="important-dates-item-text final-date">
-                    % if get_course_about_section(request, course, "end_date"):
-                        ${get_course_about_section(request, course, "end_date")}
-                    % else:
-                        ${course.end_datetime_text()}
-                    % endif
-                </span>
+                <span class="important-dates-item-text final-date localized_datetime" data-format="shortDate" data-datetime="${end_date}"></span>
             </li>
             % endif
 
@@ -323,3 +328,7 @@ from openedx.core.lib.courses import course_image_url
 %endif
 
 <%include file="../video_modal.html" />
+
+<%static:require_module_async module_name="js/dateutil_factory" class_name="DateUtilFactory">
+    DateUtilFactory.transform(iterationKey=".localized_datetime");
+</%static:require_module_async>

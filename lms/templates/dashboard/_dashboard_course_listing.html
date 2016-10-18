@@ -99,20 +99,33 @@ from student.helpers import (
         <div class="course-info">
           <span class="info-university">${course_overview.display_org_with_default} - </span>
           <span class="info-course-id">${course_overview.display_number_with_default}</span>
-          <span class="info-date-block" data-tooltip="Hi">
-          <% time_zone = get_user_time_zone(user) %>
-          % if course_overview.has_ended():
-            ${_("Ended - {end_date}").format(end_date=course_overview.end_datetime_text("SHORT_DATE", time_zone))}
-          % elif course_overview.has_started():
-            ${_("Started - {start_date}").format(start_date=course_overview.start_datetime_text("SHORT_DATE", time_zone))}
-          % elif course_overview.start_date_is_still_default: # Course start date TBD
-            ${_("Coming Soon")}
-          % elif course_overview.starts_within(days=5):   # hasn't started yet
-            ${_("Starts - {start_date}").format(start_date=course_overview.start_datetime_text("DAY_AND_TIME", time_zone))}
-          % else:   # hasn't started yet
-            ${_("Starts - {start_date}").format(start_date=course_overview.start_datetime_text("SHORT_DATE", time_zone))}
-          % endif
-          </span>
+          <%
+            if course_overview.start_date_is_still_default:
+                container_string = _("Coming Soon")
+                date = None
+                time_zone = None
+                format = None
+            else:
+                format = 'shortDate'
+                time_zone = user.preferences.model.get_value(user, "time_zone")
+                if course_overview.has_ended():
+                    container_string = _("Ended - {date}")
+                    date = course_overview.retrieve_datetime(get_start=False)
+                elif course_overview.has_started():
+                    container_string = _("Started - {date}")
+                    date = course_overview.retrieve_datetime()
+                elif course_overview.starts_within(days=5):
+                    container_string = _("Starts - {date}")
+                    date = course_overview.retrieve_datetime()
+                    format = 'defaultFormat'
+                else: ## hasn't started yet
+                    container_string = _("Starts - {date}")
+                    date = course_overview.retrieve_datetime()
+                endif
+            endif
+          %>
+        <span class="info-date-block localized-datetime" data-tooltip="Hi" data-timezone=${time_zone} data-datetime="${date}" data-format=${format} data-string="${container_string}"></span>
+
         </div>
         <div class="wrapper-course-actions">
           <div class="course-actions">
@@ -439,3 +452,7 @@ from student.helpers import (
                }
            });
 </script>
+
+<%static:require_module_async module_name="js/dateutil_factory" class_name="DateUtilFactory">
+    DateUtilFactory.transform(iterationKey=".localized-datetime");
+</%static:require_module_async>

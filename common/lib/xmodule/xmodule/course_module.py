@@ -1199,6 +1199,15 @@ class CourseDescriptor(CourseFields, SequenceDescriptor, LicenseMixin):
         """Return the course_id for this course"""
         return self.location.course_key
 
+    def retrieve_datetime(self, get_start=True):
+        """
+        Returns the desired datetime string corresponding to the course's salient date
+        formatted as an ISO string.
+        """
+        if get_start is True:
+            return self.start.strftime('%Y-%m-%dT%H:%M:%S%z')
+        return self.end.strftime('%Y-%m-%dT%H:%M:%S%z')
+
     def start_datetime_text(self, format_string="SHORT_DATE", time_zone=utc):
         """
         Returns the desired text corresponding the course's start date and time in specified time zone, defaulted
