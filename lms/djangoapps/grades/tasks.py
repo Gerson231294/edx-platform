@@ -12,6 +12,7 @@ from opaque_keys.edx.locator import CourseLocator
 from openedx.core.djangoapps.content.block_structure.api import get_course_in_cache
 
 from .config.models import PersistentGradesEnabledFlag
+from .new.course_grade import CourseGradeFactory
 from .new.subsection_grade import SubsectionGradeFactory
 from .signals.signals import COURSE_GRADE_UPDATE_REQUESTED
 from .transformer import GradesTransformer
@@ -53,7 +54,22 @@ def recalculate_subsection_grade(user_id, course_id, usage_id):
             transformed_subsection_structure[subsection_usage_key], transformed_subsection_structure
         )
     COURSE_GRADE_UPDATE_REQUESTED.send(
-        sender=None,
+        sender=recalculate_subsection_grade,
         user_id=user_id,
         course_id=course_id,
     )
+
+
+@task()
+def recalculate_course_grade(user_id, course_id):
+    """
+    Updates a saved course grade.
+    This method expects the following parameters:
+       - user_id: serialized id of applicable User object
+       - course_id: Unicode string representing the course
+    """
+    student = User.objects.get(id=user_id)
+    course_key = CourseLocator.from_string(course_id)
+    course = get_course_by_id(course_key, depth=0)
+
+    CourseGradeFactory(student).update(course)

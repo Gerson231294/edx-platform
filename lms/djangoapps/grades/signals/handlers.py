@@ -8,8 +8,8 @@ from logging import getLogger
 from student.models import user_by_anonymous_id
 from submissions.models import score_set, score_reset
 
-from .signals import SCORE_CHANGED
-from ..tasks import recalculate_subsection_grade
+from .signals import SCORE_CHANGED, COURSE_GRADE_UPDATE_REQUESTED
+from ..tasks import recalculate_subsection_grade, recalculate_course_grade
 
 log = getLogger(__name__)
 
@@ -79,8 +79,19 @@ def submissions_score_reset_handler(sender, **kwargs):  # pylint: disable=unused
 
 
 @receiver(SCORE_CHANGED)
-def enqueue_update(sender, **kwargs):  # pylint: disable=unused-argument
+def enqueue_subsection_update(sender, **kwargs):  # pylint: disable=unused-argument
     """
     Handles the SCORE_CHANGED signal by enqueueing an update operation to occur asynchronously.
     """
     recalculate_subsection_grade.apply_async(args=(kwargs['user_id'], kwargs['course_id'], kwargs['usage_id']))
+
+
+@receiver(COURSE_GRADE_UPDATE_REQUESTED)
+def enqueue_course_update(sender, **kwargs):  # pylint: disable=unused-argument
+    """
+    TODO: write a docstring
+    """
+    if sender is recalculate_subsection_grade:  # We're already in a async worker, just do the task
+        recalculate_course_grade(kwargs['user_id'], kwargs['course_id'])
+    else:  # Otherwise, queue the work to be done asynchronously
+        recalculate_course_grade.apply_async(args=(kwargs['user_id'], kwargs['course_id']))
