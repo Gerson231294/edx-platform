@@ -43,7 +43,6 @@ from courseware.masquerade import (
 )
 from courseware.model_data import DjangoKeyValueStore, FieldDataCache
 from edxmako.shortcuts import render_to_string
-from lms.djangoapps.grades.signals.handlers import score_published_handler
 from lms.djangoapps.lms_xblock.field_data import LmsFieldData
 from lms.djangoapps.lms_xblock.models import XBlockAsidesConfig
 from lms.djangoapps.lms_xblock.runtime import LmsModuleSystem
@@ -466,6 +465,11 @@ def get_module_system_for_user(user, student_data,  # TODO  # pylint: disable=to
     def publish(block, event_type, event):
         """A function that allows XModules to publish events."""
         if event_type == 'grade' and not is_masquerading_as_specific_student(user, course_id):
+            # TODO Unfortunately, this import is causing issues because
+            # of underlying issues with invalid imports into LMS by
+            # modules in openedx/core and common. Once those layering
+            # issues are fixed, we can move this import to the top.
+            from lms.djangoapps.grades.signals.handlers import score_published_handler
             score_published_handler(block, user, event['value'], event['max_value'], event.get('only_if_higher'))
         else:
             aside_context = {}
