@@ -585,12 +585,16 @@
                         },
 
                         processNumericalResponse = function(answerValues) {
-                            var firstAnswer, numericalResponseString, additionalAnswerString, textHint, hintLine,
-                                additionalAnswer, additionalAnswerData, additionalHintLine, additionalTextHint, orMatch,
-                                answerData;
+                            var firstAnswer, answerData, numericalResponseString, additionalAnswerString,
+                                textHint, hintLine, additionalTextHint, additionalHintLine, orMatch, hasTolerance;
 
                             // First string case is s?= [e.g. = 100]
                             firstAnswer = answerValues[0].replace(/^\=\s*/, '');
+
+                            // If answer is not numerical
+                            if (isNaN(parseFloat(firstAnswer)) && !isRangeToleranceCase(firstAnswer)) {
+                                return false;
+                            }
 
                             textHint = extractHint(firstAnswer);
                             hintLine = '';
@@ -598,11 +602,6 @@
                                 firstAnswer = textHint.nothint;
                                 hintLine = '  <correcthint' + textHint.labelassign + '>' +
                                     textHint.hint + '</correcthint>\n';
-                            }
-
-                            // If answer is not numerical
-                            if (isNaN(parseFloat(firstAnswer)) && !isRangeToleranceCase(firstAnswer)) {
-                                return false;
                             }
 
                             // Range case
@@ -627,20 +626,23 @@
                                 additionalTextHint = extractHint(answerValues[i]);
                                 orMatch = /^or\=\s*(.*)/.exec(additionalTextHint.nothint);
                                 if (orMatch) {
-                                    additionalAnswerData = getAnswerData(orMatch[1]);
-                                    additionalAnswer = additionalAnswerData.answer;
+                                    hasTolerance = /(.*?)\+\-\s*(.*?$)/.exec(orMatch[1]);
+                                    // Do not add additional_answer if additional answer is not numerical (eg. or= ABC)
+                                    // or contains range tolerance case (eg. or= (5,7)
+                                    // or has tolerance (eg. or= 10 +- 0.02)
+                                    if (isNaN(parseFloat(orMatch[1])) ||
+                                        isRangeToleranceCase(orMatch[1]) ||
+                                        hasTolerance) {
+                                        continue;
+                                    }
+
                                     if (additionalTextHint.hint) {
                                         additionalHintLine = '<correcthint' +
                                             additionalTextHint.labelassign + '>' +
                                             additionalTextHint.hint + '</correcthint>';
                                     }
-                                    // Do not add additional_answer if additional answer is not numerical or
-                                    // contains range tolerance case.
-                                    if (isNaN(parseFloat(additionalAnswer)) || isRangeToleranceCase(additionalAnswer)) {
-                                        continue;
-                                    }
-                                    // Additional_answer does not support responseparam (default tolerance etc.)
-                                    additionalAnswerString += '  <additional_answer answer="' + additionalAnswer + '">';
+
+                                    additionalAnswerString += '  <additional_answer answer="' + orMatch[1] + '">';
                                     additionalAnswerString += additionalHintLine;
                                     additionalAnswerString += '</additional_answer>\n';
                                 }

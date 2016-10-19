@@ -221,40 +221,22 @@ describe 'MarkdownEditingDescriptor', ->
 
         </problem>"""
       )
-    it 'Do not render ranged additional answers for numerical response', ->
+    it 'Do not render ranged/tolerance/alphabetical additional answers for numerical response', ->
       data =  MarkdownEditingDescriptor.markdownToXml("""
         Enter 1 with a tolerance:
         = 1 +- .02
         or= 2
-        or= [5,7]
-        or= 3
+        or= 3 +- 0.1
+        or= [4,6]
+        or= ABC
+        or= 7
         """)
       expect(data).toXMLEqual("""<problem>
         <numericalresponse answer="1">
           <p>Enter 1 with a tolerance:</p>
           <responseparam type="tolerance" default=".02"/>
           <additional_answer answer="2"/>
-          <additional_answer answer="3"/>
-          <formulaequationinput/>
-        </numericalresponse>
-
-        </problem>"""
-      )
-    it 'Do not add tolerance to additional answers for numerical response', ->
-      data =  MarkdownEditingDescriptor.markdownToXml("""
-        Enter 1 with a tolerance:
-        = 1 +- .02
-        or= 2
-        or= 3 +- .01
-        or= 4
-        """)
-      expect(data).toXMLEqual("""<problem>
-        <numericalresponse answer="1">
-          <p>Enter 1 with a tolerance:</p>
-          <responseparam type="tolerance" default=".02"/>
-          <additional_answer answer="2"/>
-          <additional_answer answer="3"/>
-          <additional_answer answer="4"/>
+          <additional_answer answer="7"/>
           <formulaequationinput/>
         </numericalresponse>
 
