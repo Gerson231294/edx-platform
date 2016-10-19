@@ -281,11 +281,9 @@ class ChoiceGroupTemplateTest(TemplateTestCase):
         (not a particular option) is marked incorrect.
         """
         conditions = [
-            {'status': Status('incorrect'), 'input_type': 'radio', 'value': ''},
             {'status': Status('incorrect'), 'input_type': 'checkbox', 'value': []},
             {'status': Status('incorrect'), 'input_type': 'checkbox', 'value': ['2']},
             {'status': Status('incorrect'), 'input_type': 'checkbox', 'value': ['2', '3']},
-            {'status': Status('incomplete'), 'input_type': 'radio', 'value': ''},
             {'status': Status('incomplete'), 'input_type': 'checkbox', 'value': []},
             {'status': Status('incomplete'), 'input_type': 'checkbox', 'value': ['2']},
             {'status': Status('incomplete'), 'input_type': 'checkbox', 'value': ['2', '3']}]
@@ -311,11 +309,7 @@ class ChoiceGroupTemplateTest(TemplateTestCase):
         (not a particular option) is marked unanswered.
         """
         conditions = [
-            {'status': Status('unsubmitted'), 'input_type': 'radio', 'value': ''},
-            {'status': Status('unsubmitted'), 'input_type': 'radio', 'value': []},
             {'status': Status('unsubmitted'), 'input_type': 'checkbox', 'value': []},
-            {'input_type': 'radio', 'value': ''},
-            {'input_type': 'radio', 'value': []},
             {'input_type': 'checkbox', 'value': []},
             {'input_type': 'checkbox', 'value': ['1']},
             {'input_type': 'checkbox', 'value': ['1', '2']}]
