@@ -59,8 +59,8 @@
         <span id="answer_${id}"></span>
     </fieldset>
     <div class="indicator-container">
-        % if input_type == 'checkbox' or not value:
-          % if (not show_correctness == 'never') or status.classname == 'unanswered':
+        % if input_type == 'checkbox':
+          % if show_correctness != 'never':
             <%include file="status_span.html" args="status=status, status_id=id"/>
           % else:
             <%include file="status_span.html" args="status=status, status_id=id, hide_correctness=True"/>
