@@ -172,7 +172,7 @@ Feature: LMS.Answer problems
 
         Examples:
         | ProblemType       | Points Possible               |
-        | image             | 1 point possible (ungraded)   |
+        | image             | 0/1 point (ungraded)   |
 
     Scenario: I can reset the correctness of a problem after changing my answer
         Given I am viewing a "<ProblemType>" problem
