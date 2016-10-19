@@ -394,7 +394,7 @@ class CourseOverview(TimeStampedModel):
             self.advertised_start,
         )
 
-    def end_datetime_text(self):
+    def end_datetime_text(self, format_string="SHORT_DATE", time_zone=utc):
         """
         Returns the end date or datetime for the course formatted as a string.
 
@@ -407,7 +407,7 @@ class CourseOverview(TimeStampedModel):
         )
 
     @property
-    def sorting_score(self, format_string="SHORT_DATE", time_zone=utc):
+    def sorting_score(self):
         """
         Returns a tuple that can be used to sort the courses according
         the how "new" they are. The "newness" score is computed using a
