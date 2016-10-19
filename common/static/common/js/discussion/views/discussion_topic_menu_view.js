@@ -34,7 +34,7 @@
                     this.setTopic(this.$('.post-topic option').filter(
                         '[data-discussion-id="' + this.getCurrentTopicId() + '"]'
                     ));
-                } else if ($general) {
+                } else if ($general.length > 0) {
                     this.setTopic($general);
                 } else {
                     this.setTopic(this.$('.post-topic option').first());
