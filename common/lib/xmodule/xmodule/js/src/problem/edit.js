@@ -600,6 +600,7 @@
                             hintLine = '';
                             if (textHint.hint) {
                                 firstAnswer = textHint.nothint;
+                                // safe-lint: disable=javascript-concat-html
                                 hintLine = '  <correcthint' + textHint.labelassign + '>' +
                                     textHint.hint + '</correcthint>\n';
                             }
@@ -608,11 +609,14 @@
                             if (isRangeToleranceCase(firstAnswer)) {
                                 // [5, 7) or (5, 7), or (1.2345 * (2+3), 7*4 ]  - range tolerance case
                                 // = (5*2)*3 should not be used as range tolerance
+                                // safe-lint: disable=javascript-concat-html
                                 numericalResponseString = '<numericalresponse answer="' + firstAnswer + '">\n';
                             } else {
                                 answerData = getAnswerData(firstAnswer);
+                                // safe-lint: disable=javascript-concat-html
                                 numericalResponseString = '<numericalresponse answer="' + answerData.answer + '">\n';
                                 if (answerData.default) {
+                                    // safe-lint: disable=javascript-concat-html
                                     numericalResponseString += '  <responseparam type="tolerance" default="' +
                                         answerData.default + '" />\n';
                                 }
@@ -637,11 +641,13 @@
                                     }
 
                                     if (additionalTextHint.hint) {
+                                        // safe-lint: disable=javascript-concat-html
                                         additionalHintLine = '<correcthint' +
                                             additionalTextHint.labelassign + '>' +
                                             additionalTextHint.hint + '</correcthint>';
                                     }
 
+                                    // safe-lint: disable=javascript-concat-html
                                     additionalAnswerString += '  <additional_answer answer="' + orMatch[1] + '">';
                                     additionalAnswerString += additionalHintLine;
                                     additionalAnswerString += '</additional_answer>\n';
