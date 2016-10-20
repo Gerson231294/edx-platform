@@ -279,7 +279,7 @@ class @StudentAdmin
         send_data =
           all_students: true
           problem_to_reset: problem_to_reset
-        success_message = gettext("Successfully started task to reset attempts for problem '<%= problem_id %>'. Click the 'Show Background Task History for Problem' button to see the status of the task.")
+        success_message = gettext("Successfully started task to reset attempts for problem '<%= problem_id %>'. Click the 'Show Task Status' button to see the status of the task.")
         full_success_message = _.template(success_message)({problem_id: problem_to_reset})
         error_message = gettext("Error starting a task to reset attempts for all students on problem '<%= problem_id %>'. Make sure that the problem identifier is complete and correct.")
         full_error_message = _.template(error_message)({problem_id: problem_to_reset})
@@ -330,7 +330,7 @@ class @StudentAdmin
       unique_student_identifier: unique_student_identifier
       problem_to_reset: problem_to_reset
       only_if_higher: only_if_higher
-    success_message = gettext("Started rescore problem task for problem '<%= problem_id %>' and student '<%= student_id %>'. Click the 'Show Background Task History for Student' button to see the status of the task.")
+    success_message = gettext("Started rescore problem task for problem '<%= problem_id %>' and student '<%= student_id %>'. Click the 'Show Task Status' button to see the status of the task.")
     full_success_message = _.template(success_message)({student_id: unique_student_identifier, problem_id: problem_to_reset})
     error_message = gettext("Error starting a task to rescore problem '<%= problem_id %>' for student '<%= student_id %>'. Make sure that the the problem and student identifiers are complete and correct.")
     full_error_message = _.template(error_message)({student_id: unique_student_identifier, problem_id: problem_to_reset})
@@ -354,7 +354,7 @@ class @StudentAdmin
         all_students: true
         problem_to_reset: problem_to_reset
         only_if_higher: only_if_higher
-      success_message = gettext("Successfully started task to rescore problem '<%= problem_id %>' for all students. Click the 'Show Background Task History for Problem' button to see the status of the task.")
+      success_message = gettext("Successfully started task to rescore problem '<%= problem_id %>' for all students. Click the 'Show Task Status' button to see the status of the task.")
       full_success_message = _.template(success_message)({problem_id: problem_to_reset})
       error_message = gettext("Error starting a task to rescore problem '<%= problem_id %>'. Make sure that the problem identifier is complete and correct.")
       full_error_message = _.template(error_message)({problem_id: problem_to_reset})
@@ -384,7 +384,7 @@ class @StudentAdmin
       url: @$btn_rescore_entrance_exam.data 'endpoint'
       data: send_data
       success: @clear_errors_then ->
-        success_message = gettext("Started entrance exam rescore task for student '{student_id}'. Click the 'Show Background Task History for Student' button to see the status of the task.")
+        success_message = gettext("Started entrance exam rescore task for student '{student_id}'. Click the 'Show Task Status' button to see the status of the task.")
         full_success_message = interpolate_text(success_message, {student_id: unique_student_identifier})
         alert full_success_message
       error: std_ajax_err =>

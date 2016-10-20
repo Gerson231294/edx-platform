@@ -52,7 +52,7 @@ Feature: LMS.LTI component
   And I see graph with total progress "5%"
   Then I click on the "Instructor" tab
   And I click the "Student Admin" button
-  And I click on the "Gradebook" link
+  And I click on the "View Gradebook" link
   And I see in the gradebook table that "HW" is "50"
   And I see in the gradebook table that "Total" is "5"
 
@@ -91,7 +91,7 @@ Feature: LMS.LTI component
   And I see graph with total progress "8%"
   Then I click on the "Instructor" tab
   And I click the "Student Admin" button
-  And I click on the "Gradebook" link
+  And I click on the "View Gradebook" link
   And I see in the gradebook table that "HW" is "80"
   And I see in the gradebook table that "Total" is "8"
   And I visit the LTI component
@@ -117,7 +117,7 @@ Feature: LMS.LTI component
   And I see graph with total progress "0%"
   Then I click on the "Instructor" tab
   And I click the "Student Admin" button
-  And I click on the "Gradebook" link
+  And I click on the "View Gradebook" link
   And I see in the gradebook table that "HW" is "0"
   And I see in the gradebook table that "Total" is "0"
 

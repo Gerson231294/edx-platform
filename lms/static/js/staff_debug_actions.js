@@ -67,7 +67,7 @@ var StaffDebug = (function() {
             location: location,
             method: 'reset_student_attempts',
             success_msg: gettext('Successfully reset the attempts for user {user}'),
-            error_msg: gettext('Failed to reset attempts.'),
+            error_msg: gettext('Failed to reset attempts for user.'),
             delete_module: false
         });
     };
@@ -78,7 +78,7 @@ var StaffDebug = (function() {
             location: location,
             method: 'reset_student_attempts',
             success_msg: gettext('Successfully deleted student state for user {user}'),
-            error_msg: gettext('Failed to delete student state.'),
+            error_msg: gettext('Failed to delete student state for user.'),
             delete_module: true
         });
     };
@@ -89,7 +89,7 @@ var StaffDebug = (function() {
             location: location,
             method: 'rescore_problem',
             success_msg: gettext('Successfully rescored problem for user {user}'),
-            error_msg: gettext('Failed to rescore problem.'),
+            error_msg: gettext('Failed to rescore problem for user.'),
             only_if_higher: false
         });
     };
@@ -99,8 +99,8 @@ var StaffDebug = (function() {
             locationName: locname,
             location: location,
             method: 'rescore_problem',
-            success_msg: gettext('Successfully rescored problem (if higher) for user {user}'),
-            error_msg: gettext('Failed to rescore problem (if higher).'),
+            success_msg: gettext('Successfully rescored problem to improve score for user {user}'),
+            error_msg: gettext('Failed to rescore problem to improve score for user.'),
             only_if_higher: true
         });
     };

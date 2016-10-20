@@ -80,7 +80,7 @@ define([
                     };
                     StaffDebug.doInstructorDashAction(action);
                     AjaxHelpers.respondWithError(requests);
-                    expect($('#idash_msg').text()).toBe('Failed to reset attempts. ');
+                    expect($('#idash_msg').text()).toBe('Failed to reset attempts for user. ');
                     $('#result_' + locationName).remove();
                 });
             });
